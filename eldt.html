@@ -16,10 +16,54 @@
       background: radial-gradient(1200px 600px at 20% 0%, #0b1024 0%, var(--bg) 50%, #0a0f20 100%);
       color: var(--text); line-height: 1.6; display: flex; min-height: 100vh;
     }
+    
+    /* Custom Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(59, 130, 246, 0.3);
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(59, 130, 246, 0.5);
+    }
+    
+    /* Firefox scrollbar */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(59, 130, 246, 0.3) rgba(15, 23, 42, 0.5);
+    }
+    
+    /* Mobile Menu Toggle */
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 200;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      box-shadow: var(--shadow);
+    }
+    
     aside {
       width: 320px; background: var(--card); border-right: 1px solid var(--border);
       display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100;
+      transition: transform 0.3s ease;
     }
+    
     .sidebar-header { padding: 25px 20px; border-bottom: 1px solid var(--border); cursor: pointer; }
     .global-score-box {
       margin: 15px; padding: 20px; background: rgba(255,255,255,0.03);
@@ -41,7 +85,7 @@
     main { flex: 1; margin-left: 320px; padding: 40px; display: flex; justify-content: center; }
     .container { max-width: 850px; width: 100%; }
     .quiz-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
-    .quiz-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .quiz-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
     .progress-bar { width: 200px; height: 10px; background: #0b1221; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
     .progress-fill { height: 100%; width: 0%; background: var(--primary); transition: width 0.3s; }
 
@@ -64,11 +108,87 @@
     .warning-box { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 18px; margin: 20px 0; border-radius: 8px; }
     .success-box { background: rgba(34, 197, 94, 0.1); border-left: 4px solid var(--accent); padding: 18px; margin: 20px 0; border-radius: 8px; }
     .take-quiz-btn { width: 100%; margin-top: 30px; padding: 15px; font-size: 1.1rem; }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+      
+      aside {
+        transform: translateX(-100%);
+      }
+      
+      aside.mobile-open {
+        transform: translateX(0);
+      }
+      
+      main {
+        margin-left: 0;
+        padding: 80px 20px 20px 20px;
+      }
+      
+      .quiz-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .progress-bar {
+        width: 100%;
+      }
+      
+      .content-section {
+        padding: 20px;
+        max-height: 60vh;
+      }
+      
+      .content-section h2 {
+        font-size: 1.5rem;
+      }
+      
+      .content-section h3 {
+        font-size: 1.2rem;
+      }
+      
+      .btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+      }
+      
+      .global-score-box {
+        margin: 10px;
+        padding: 15px;
+      }
+      
+      .global-score-box strong {
+        font-size: 1.5rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      main {
+        padding: 70px 10px 10px 10px;
+      }
+      
+      .quiz-card {
+        border-radius: 12px;
+      }
+      
+      .content-section {
+        padding: 15px;
+      }
+      
+      .sidebar-header h3 {
+        font-size: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <aside>
+  <button class="menu-toggle" onclick="toggleMobileMenu()">☰ Menu</button>
+
+  <aside id="sidebar">
     <div class="sidebar-header" onclick="showHome()"><h3>ELDT CLASS A CDL THEORY</h3></div>
     <div class="global-score-box">
       <span>Overall Score</span>
@@ -287,6 +407,18 @@
       return Object.values(quizRegistry).reduce((sum, sec) => sum + sec.questions.length, 0);
     }
 
+    function toggleMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('mobile-open');
+    }
+    
+    function closeMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('mobile-open');
+      }
+    }
+
     function initSidebar() {
       const nav = document.getElementById('sidebarNav');
       nav.innerHTML = '';
@@ -294,8 +426,8 @@
         nav.innerHTML += `
           <div class="nav-item" onclick="toggleMenu('m${id}')">${data.title}</div>
           <div id="m${id}" class="sub-menu">
-            <div class="sub-item" onclick="showContent(${id})">Study Content</div>
-            <div id="quizLabel${id}" class="sub-item" onclick="loadQuiz(${id})">Quiz (0 / ${data.questions.length} Correct)</div>
+            <div class="sub-item" onclick="showContent(${id}); closeMobileMenu();">Study Content</div>
+            <div id="quizLabel${id}" class="sub-item" onclick="loadQuiz(${id}); closeMobileMenu();">Quiz (0 / ${data.questions.length} Correct)</div>
           </div>`;
       });
       showHome();
@@ -309,6 +441,7 @@
 
     function showHome() {
       currentQuizId = null;
+      closeMobileMenu();
       document.getElementById('contentArea').innerHTML = `
         <div style="text-align:center; padding-top:50px;">
           <h1>Student Dashboard</h1>
@@ -1387,9 +1520,9 @@
             `).join('')}</div>
             <div id="feedback" class="feedback" style="display:none"></div>
           </div>
-          <div style="padding:20px; border-top:1px solid var(--border); display:flex; justify-content:space-between">
+          <div style="padding:20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; flex-wrap: wrap; gap: 10px">
             <button class="btn btn-outline" onclick="showHome()">Back to Dashboard</button>
-            <div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap">
                <button id="subBtn" class="btn btn-primary" onclick="submitAnswer()">Submit Answer</button>
                <button id="nextBtn" class="btn btn-primary" style="display:none" onclick="nextQuestion()">Next Question</button>
             </div>
