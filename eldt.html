@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ELDT Class A CDL Theory</title>
+  <style>
+    :root {
+      --bg: #0f172a; --card: #111827; --muted: #94a3b8; --text: #e5e7eb;
+      --accent: #22c55e; --danger: #ef4444; --primary: #3b82f6; --border: #1f2937;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, #0b1024 0%, var(--bg) 50%, #0a0f20 100%);
+      color: var(--text); line-height: 1.6; display: flex; min-height: 100vh;
+    }
+    aside {
+      width: 320px; background: var(--card); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 100;
+    }
+    .sidebar-header { padding: 25px 20px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .global-score-box {
+      margin: 15px; padding: 20px; background: rgba(255,255,255,0.03);
+      border-radius: 12px; border: 1px solid var(--border); text-align: center;
+    }
+    .global-score-box span { display: block; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+    .global-score-box strong { font-size: 1.8rem; transition: color 0.3s; }
+    .attempted-text { font-size: 0.9rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+    .pass-msg { font-size: 0.75rem; color: #60a5fa; margin-top: 10px; font-style: italic; line-height: 1.2; }
+
+    nav { flex: 1; overflow-y: auto; padding: 10px 0; }
+    .nav-item { padding: 14px 20px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); font-weight: 500; }
+    .sub-menu { display: none; background: #0b1221; }
+    .sub-menu.active { display: block; }
+    .sub-item { padding: 12px 35px; font-size: 0.9rem; color: var(--muted); cursor: pointer; border-left: 3px solid transparent; }
+    .sub-item:hover { background: rgba(255,255,255,0.02); color: white; }
+    .sub-item.active { color: var(--primary); border-left-color: var(--primary); }
+
+    main { flex: 1; margin-left: 320px; padding: 40px; display: flex; justify-content: center; }
+    .container { max-width: 850px; width: 100%; }
+    .quiz-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+    .quiz-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .progress-bar { width: 200px; height: 10px; background: #0b1221; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .progress-fill { height: 100%; width: 0%; background: var(--primary); transition: width 0.3s; }
+
+    .option { display: flex; gap: 12px; padding: 15px; border: 1px solid var(--border); background: #0b1221; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
+    .feedback { font-weight: 700; margin-top: 15px; padding: 10px; border-radius: 8px; }
+    .feedback.correct { color: var(--accent); background: rgba(34, 197, 94, 0.1); }
+    .feedback.incorrect { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+
+    .btn { padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; border: none; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+
+    .content-section { padding: 30px; max-height: 70vh; overflow-y: auto; }
+    .content-section h2 { color: var(--primary); margin-bottom: 20px; font-size: 2rem; }
+    .content-section h3 { color: var(--accent); margin-top: 30px; margin-bottom: 15px; font-size: 1.4rem; }
+    .content-section p { margin-bottom: 15px; color: var(--text); line-height: 1.8; }
+    .content-section ul, .content-section ol { margin-left: 25px; margin-bottom: 15px; }
+    .content-section li { margin-bottom: 10px; line-height: 1.7; }
+    .highlight-box { background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--primary); padding: 18px; margin: 20px 0; border-radius: 8px; }
+    .warning-box { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 18px; margin: 20px 0; border-radius: 8px; }
+    .success-box { background: rgba(34, 197, 94, 0.1); border-left: 4px solid var(--accent); padding: 18px; margin: 20px 0; border-radius: 8px; }
+    .take-quiz-btn { width: 100%; margin-top: 30px; padding: 15px; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+
+  <aside>
+    <div class="sidebar-header" onclick="showHome()"><h3>ELDT CLASS A CDL THEORY</h3></div>
+    <div class="global-score-box">
+      <span>Overall Score</span>
+      <strong id="globalCount">0 / 0 Correct</strong>
+      <div id="pctBox" style="font-size: 1.1rem; margin-top: 5px; font-weight: bold;">0%</div>
+      <div id="attemptedBox" class="attempted-text">Total Attempted: 0</div>
+      <div class="pass-msg">80% of correct answers are required based on the total number of questions in order to pass</div>
+    </div>
+    <nav id="sidebarNav"></nav>
+  </aside>
+
+  <main><div id="contentArea" class="container"></div></main>
+
+  <script>
+    const quizRegistry = {
+      1: { title: "Basic Operation", questions: [
+		  { q: "What must you do to successfully complete this course?", options: { a: "Finish all lessons with at least 80%", b: "Finish all lessons with at least 70%", c: "Finish all lessons with at least 85%" }, correct: "a" },
+		  { q: "Who is responsible for the safety of the load and vehicle?", options: { a: "The driver", b: "The loader", c: "The company" }, correct: "a" },
+		  { q: "Driving a commercial vehicle is a serious responsibility.", options: { a: "Because it involves safety of lives and cargo", b: "Because it requires following strict regulations", c: "Because it is just like driving a car", d: "Because it is optional" }, correct: "a" },
+		  { q: "FMCSRs and HMRs are…", options: { a: "Minimum safety standards for trucking", b: "Guidelines only for passenger cars", c: "Optional recommendations", d: "Rules only for state police" }, correct: "a" },
+		  { q: "Vehicle size and weight limits…", options: { a: "Are the same in every state", b: "Differ depending on the state", c: "Are set only by federal law", d: "Don't apply to commercial vehicles" }, correct: "b" },
+		  { q: "Why is a Pre-Trip inspection important?", options: { a: "To find defects that could cause accidents", b: "To make your boss happy", c: "It isn't important" }, correct: "a" },
+		  { q: "Checking oil level during Pre-Trip is important because…", options: { a: "It prevents engine damage", b: "It's required by law", c: "It saves fuel", d: "It's optional" }, correct: "a" },
+		  { q: "What is the minimum steer tire tread depth?", options: { a: "3/32\"", b: "2/32\"", c: "4/32\"" }, correct: "c" },
+		  { q: "If you notice unusual sounds, smells, or vibrations while driving, you should…", options: { a: "Continue driving normally", b: "Stop and check immediately", c: "Ignore them if minor", d: "Report only at the end of the trip" }, correct: "b" },
+		  { q: "Is the service brake a primary or secondary component?", options: { a: "Primary", b: "Secondary" }, correct: "a" },
+		  { q: "What does the voltage gauge show?", options: { a: "Operating voltage", b: "Fuel level", c: "Oil pressure" }, correct: "a" },
+		  { q: "If the ABS light stays on…", options: { a: "ABS is working properly", b: "ABS is not working properly", c: "ABS is optional equipment", d: "ABS only matters in rain" }, correct: "b" },
+		  { q: "How long should it take to build air pressure from 50–90 PSI?", options: { a: "1 minute", b: "3 minutes", c: "5 minutes" }, correct: "b" },
+		  { q: "How long should you hold the brake pedal when testing hydraulic brakes?", options: { a: "3 seconds", b: "5 seconds", c: "10 seconds" }, correct: "b" },
+		  { q: "Does pulling the trailer brake lever harder increase trailer braking force?", options: { a: "Yes", b: "No" }, correct: "b" },
+		  { q: "Adjusting seat and mirrors before driving ensures…", options: { a: "Maximum visibility", b: "Comfort only", c: "Faster driving", d: "Nothing important" }, correct: "a" },
+		  { q: "Keeping mirrors and the windshield clean helps prevent accidents.", options: { a: "True", b: "False" }, correct: "a" },
+		  { q: "What is the most important thing to watch during turns?", options: { a: "Your phone", b: "The rear of your trailer", c: "Your shift pattern" }, correct: "b" },
+		  { q: "Low bridge signs…", options: { a: "Are always accurate", b: "May be inaccurate", c: "Apply only to cars", d: "Are optional to follow" }, correct: "b" },
+		  { q: "Was the bridge weight formula created to protect older bridges?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Backing should be avoided because…", options: { a: "It increases accident risk", b: "It wastes fuel", c: "It is illegal", d: "It is slower" }, correct: "a" },
+		  { q: "Does your starting position matter when backing?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Should you get out and look (G.O.A.L.) before backing?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Blind side backing is more dangerous because…", options: { a: "Visibility is reduced", b: "It takes longer", c: "It damages tires", d: "It is illegal" }, correct: "a" },
+		  { q: "Is using a spotter helpful, even though you are still responsible?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "How far should you press the clutch when shifting a non-synced transmission?", options: { a: "To the floor", b: "2–3 inches", c: "Neither" }, correct: "b" },
+		  { q: "If you miss a gear, should you keep the clutch pressed down?", options: { a: "Yes, until you stop", b: "No, release and try again", c: "Only if downhill", d: "Only if uphill" }, correct: "b" },
+		  { q: "When downshifting a non-synced transmission, what RPM should you drop to before shifting to neutral?", options: { a: "1100", b: "900", c: "700" }, correct: "c" },
+		  { q: "Is proper shifting technique important to prevent equipment damage?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "On the interstate, you should…", options: { a: "Relax and stop paying attention", b: "Stay alert and scan ahead", c: "Drive faster than normal", d: "Ignore mirrors" }, correct: "b" },
+		  { q: "In tight areas, you should…", options: { a: "Always have an exit strategy", b: "Rely on luck", c: "Stop and wait", d: "Ignore surroundings" }, correct: "a" },
+		  { q: "When should you first inspect your cargo after starting your trip?", options: { a: "25 miles", b: "50 miles", c: "75 miles" }, correct: "b" },
+		  { q: "Do different rigs have different coupling/uncoupling procedures?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "What should you do before coupling?", options: { a: "Inspect the area and chock wheels", b: "Immediately back under the trailer", c: "Skip inspection" }, correct: "a" },
+		  { q: "When backing under a trailer, what should you do?", options: { a: "Use lowest reverse gear", b: "Back slowly", c: "Stop when kingpin locks", d: "All of the above" }, correct: "d" },
+		  { q: "Should you visually inspect the coupling to ensure it is secure?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Which lines must be checked for proper connection?", options: { a: "Electrical cord", b: "Air lines", c: "Both" }, correct: "c" },
+		  { q: "Why must you check trailer clearance after raising landing gear?", options: { a: "To avoid tractor–trailer damage", b: "To avoid landing gear catching during turns", c: "Both" }, correct: "c" },
+		  { q: "What is the final step after raising landing gear and checking clearance?", options: { a: "Remove wheel chocks", b: "Drive away immediately" }, correct: "a" },
+		  { q: "When uncoupling, what must you do before unlocking the fifth wheel?", options: { a: "Position the rig correctly", b: "Ease pressure on locking jaws", c: "Both" }, correct: "c" },
+		  { q: "Should you chock trailer wheels if it has no spring brakes?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Should you keep your feet clear of tractor wheels when unlocking the fifth wheel?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Should the tractor remain under the trailer until you confirm landing gear is stable?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Should you secure the tractor before inspecting trailer supports?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "When inspecting trailer supports, what should you check?", options: { a: "Ground support", b: "Landing gear condition", c: "Both" }, correct: "c" },
+		  { q: "After confirming landing gear is stable, is it safe to pull the tractor away?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Wider vehicles…", options: { a: "Have less room for error", b: "Are easier to maneuver", c: "Require no special care", d: "Are exempt from rules" }, correct: "a" },
+		  { q: "Should you be 100% sure nothing is behind you before backing?", options: { a: "Yes", b: "No" }, correct: "a" },
+		  { q: "Should you always use the lowest gear when backing?", options: { a: "Yes", b: "No" }, correct: "a" },
+      ]},
+      2: { title: "Safe Operating Procedures", questions: [
+	      { q: "You should always be aware of your surroundings when driving a CMV.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "How far ahead should you look when driving a CMV?", options: { a: "3–6 seconds", b: "7–10 seconds", c: "12–15 seconds" }, correct: "c" },
+	      { q: "Is it acceptable to drive without checking your mirrors regularly?", options: { a: "Yes", b: "No", c: "Only on straight, empty roads" }, correct: "b" },
+	      { q: "Objects in convex mirrors appear:", options: { a: "Closer than they are", b: "Further than they are", c: "The same as in flat mirrors" }, correct: "b" },
+	      { q: "When signaling a lane change, you should:", options: { a: "Signal and wait for traffic to clear before moving", b: "Signal and immediately move", c: "Not signal" }, correct: "a" },
+	      { q: "Is it acceptable to wave your hands out the window to direct traffic?", options: { a: "Yes", b: "No", c: "Only in emergencies" }, correct: "b" },
+	      { q: "Use headlights during the day when visibility is low.", options: { a: "Yes", b: "No" }, correct: "a" },
+	      { q: "How long do you have to place emergency warning devices after stopping?", options: { a: "5 minutes", b: "10 minutes", c: "As soon as possible" }, correct: "b" },
+	      { q: "On a two-way highway, the standard placement of warning devices is:", options: { a: "20 ft from vehicle and 200 ft ahead/behind", b: "10 ft from vehicle and 100 ft ahead/behind", c: "20 ft from vehicle and 100 ft ahead/behind" }, correct: "b" },
+	      { q: "If the view is obstructed, how far back should the last device be placed?", options: { a: "150 ft", b: "250 ft", c: "100–500 ft depending on obstruction" }, correct: "c" },
+	      { q: "Distracted driving is anything that takes your attention away from driving.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "If you are not focused while operating a CMV, the likely outcome is:", options: { a: "Minor inconvenience", b: "Injury or death to you or others", c: "No consequence" }, correct: "b" },
+	      { q: "Should you pull over before checking a mobile device?", options: { a: "Yes", b: "No", c: "Only if traffic is heavy" }, correct: "a" },
+	      { q: "To be a professional driver you must stay focused and avoid distractions.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Is it your responsibility to watch out for other distracted drivers?", options: { a: "Yes", b: "No", c: "Only in urban areas" }, correct: "a" },
+	      { q: "Perception distance is the distance your vehicle travels from seeing a hazard until you recognize it.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Average human reaction time to a hazard is about:", options: { a: "2–3 seconds", b: "1–2 seconds", c: "0.75–1 second", d: "Less than 0.5 second" }, correct: "c" },
+	      { q: "At 55 mph in ideal conditions, stopping distance is closest to:", options: { a: "220 feet", b: "319 feet", c: "419 feet" }, correct: "c" },
+	      { q: "By slowing down you can reduce braking distance.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Which requires greater stopping distance?", options: { a: "Empty vehicle", b: "Loaded vehicle", c: "Both the same" }, correct: "a" },
+	      { q: "A vehicle is tailgating you in bad weather. What should you do?", options: { a: "Speed up to keep traffic flowing", b: "Find a safe place to pull over and let them pass", c: "Brake-check them" }, correct: "b" },
+	      { q: "If you're not sure of road conditions, you should:", options: { a: "Slow down", b: "Maintain speed", c: "Speed up to clear the area" }, correct: "a" },
+	      { q: "Should you ever exceed the posted speed limit for a curve?", options: { a: "Yes, if you feel confident", b: "No", c: "Only if empty and light load" }, correct: "b" },
+	      { q: "If you must use low beams at night, should you reduce speed to allow more reaction time?", options: { a: "Yes", b: "No", c: "Only in heavy traffic" }, correct: "a" },
+	      { q: "Where trucks are required to go slower, be extra careful when changing lanes.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "On steep grades, you should be in a lower gear before starting the grade.", options: { a: "Yes", b: "No", c: "Only if heavy load" }, correct: "a" },
+	      { q: "Never speed in work zones.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Maintain space ahead – always watch the space in front of your vehicle.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "If you see brake lights ahead, you should:", options: { a: "Apply brakes early and smoothly", b: "Ignore them", c: "Swerve around" }, correct: "a" },
+	      { q: "For a 40ft vehicle at 50 mph in ideal conditions, recommended following distance is:", options: { a: "4 seconds", b: "5 seconds", c: "7 seconds" }, correct: "b" },
+	      { q: "Should you ever 'brake check' a tailgater?", options: { a: "No", b: "Yes", c: "Only in emergencies" }, correct: "a" },
+	      { q: "Staying centered in your lane helps avoid other traffic.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Checking mirrors to see your trailer helps you stay centered.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Is it safe to have smaller vehicles traveling next to you?", options: { a: "Yes", b: "No", c: "Only at low speed" }, correct: "b" },
+	      { q: "Can high winds push you out of your lane regardless of vehicle size?", options: { a: "Yes", b: "No" }, correct: "a" },
+	      { q: "Should you assume posted overhead clearance heights are always correct?", options: { a: "Yes", b: "No", c: "Only on major highways" }, correct: "b" },
+	      { q: "Is the clearance under your vehicle important to monitor?", options: { a: "Yes", b: "No" }, correct: "a" },
+	      { q: "When making turns, watch your trailer in the mirrors through the whole turn.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Before pulling into traffic, make sure traffic is clear and you have enough room.", options: { a: "Yes", b: "No" }, correct: "a" },
+	      { q: "If you feel sleepy while driving, the best cure is:", options: { a: "Roll windows down", b: "Turn music up", c: "Stop driving and sleep" }, correct: "c" },
+	      { q: "Before starting a trip, check coolant, heating/defrost, wipers and washer fluid.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Should you learn how to put chains on before you need them?", options: { a: "Yes", b: "No", c: "Only if you drive in snow regularly" }, correct: "a" },
+	      { q: "In bad weather, lack of spray from other vehicles may indicate ice on the road.", options: { a: "True", b: "False" }, correct: "a" },
+	      { q: "Should you brake in corners during inclement weather?", options: { a: "No", b: "Yes", c: "Only lightly" }, correct: "a" },
+	      { q: "Can water in the brakes cause them to become weak?", options: { a: "Yes", b: "No" }, correct: "a" },
+	      { q: "How often should you inspect tires in very hot weather?", options: { a: "Every 4 hours / 200 miles", b: "Every 2 hours / 100 miles", c: "Every 1 hour / 50 miles" }, correct: "b" }
+      ]}
+    };
+
+    let sectionScores = {
+      1: { correct: 0, attempted: 0, needsReset: false },
+      2: { correct: 0, attempted: 0, needsReset: false }
+    };
+
+    let currentQuizId = null;
+    let currentQIndex = 0;
+
+    function calculateTotalQuestions() {
+      return Object.values(quizRegistry).reduce((sum, sec) => sum + sec.questions.length, 0);
+    }
+
+    function initSidebar() {
+      const nav = document.getElementById('sidebarNav');
+      nav.innerHTML = '';
+      Object.entries(quizRegistry).forEach(([id, data]) => {
+        nav.innerHTML += `
+          <div class="nav-item" onclick="toggleMenu('m${id}')">${data.title}</div>
+          <div id="m${id}" class="sub-menu">
+            <div class="sub-item" onclick="showContent(${id})">Study Content</div>
+            <div id="quizLabel${id}" class="sub-item" onclick="loadQuiz(${id})">Quiz (0 / ${data.questions.length} Correct)</div>
+          </div>`;
+      });
+      showHome();
+    }
+
+    function toggleMenu(id) {
+      document.querySelectorAll('.sub-menu').forEach(m => m.id !== id && m.classList.remove('active'));
+      const menu = document.getElementById(id);
+      if(menu) menu.classList.toggle('active');
+    }
+
+    function showHome() {
+      currentQuizId = null;
+      document.getElementById('contentArea').innerHTML = `
+        <div style="text-align:center; padding-top:50px;">
+          <h1>Student Dashboard</h1>
+          <p>Select a section on the left to start your training.</p>
+        </div>`;
+      updateGlobalDisplay();
+    }
+
+    function showContent(id) {
+      currentQuizId = null;
+      const content = getContentForSection(id);
+      document.getElementById('contentArea').innerHTML = `
+        <div class="quiz-card">
+          <div class="quiz-header">
+            <h2 style="margin:0; color: var(--primary);">${quizRegistry[id].title}</h2>
+          </div>
+          <div class="content-section">
+            ${content}
+            <button class="btn btn-primary take-quiz-btn" onclick="loadQuiz(${id})">Take Quiz for ${quizRegistry[id].title}</button>
+          </div>
+        </div>`;
+    }
+
+    function getContentForSection(id) {
+      if (id === 1) {
+        return `
+          <h2>Basic Operation</h2>
+
+          <p>Welcome to the foundational section of your Class A CDL training. This section covers essential knowledge and skills that every professional commercial driver must master to operate safely and comply with federal regulations.</p>
+
+          <div class="highlight-box">
+            <strong>Course Requirement:</strong> You must complete all lessons with at least 80% proficiency to successfully pass this ELDT training and qualify for your CDL exam.
+          </div>
+
+          <h3>1. Driver Responsibility and Safety Standards</h3>
+
+          <p>As a commercial driver, you bear the ultimate responsibility for the safety of your vehicle, cargo, and everyone on the road. This responsibility cannot be delegated to loaders, mechanics, or dispatchers. You are the final authority on whether your vehicle is safe to operate.</p>
+
+          <p>Driving a commercial motor vehicle is a serious responsibility because it involves the safety of lives and cargo. The Federal Motor Carrier Safety Regulations (FMCSRs) and Hazardous Materials Regulations (HMRs) establish minimum safety standards for trucking operations. These are not optional guidelines but legally enforceable requirements that protect you and the public.</p>
+
+          <div class="warning-box">
+            <strong>Important:</strong> Vehicle size and weight limits differ depending on the state. Always verify state-specific requirements before operating across state lines.
+          </div>
+
+          <h3>2. Pre-Trip Inspection</h3>
+
+          <p>The pre-trip inspection is your first line of defense against mechanical failures and accidents. This systematic check helps identify defects that could cause crashes, breakdowns, or regulatory violations.</p>
+
+          <p><strong>Why Pre-Trip Inspections Matter:</strong></p>
+          <ul>
+            <li>Identify safety hazards before they cause accidents</li>
+            <li>Prevent costly breakdowns on the road</li>
+            <li>Comply with FMCSA regulations</li>
+            <li>Pass roadside inspections</li>
+            <li>Extend vehicle life through early problem detection</li>
+          </ul>
+
+          <div class="success-box">
+            <strong>Critical Inspection Items:</strong>
+            <ul style="margin: 10px 0 0 0;">
+              <li><strong>Oil/Coolant/Power Steering Levels:</strong> Check during pre-trip to prevent engine damage. Low oil can cause catastrophic engine failure. Low coolant may cause engine to overheat</li>
+              <li><strong>Cuts/Abrasions/Leaks:</strong> Check hoses, pipes, tanks, reservoirs, harness for cuts, damages, abrasions, bulges and leaks (power steering fluid, coolant, air leaks, hydraulic leaks, etc.) </li>
+              <li><strong>Tires/wheels</strong> Front tires tread dept > 4/32" & no recap (back tires > 2/32"), tire types/pressure; check for buldges, air leaks, tight lug nuts, hub/axle seal leaks, mud flaps, debris, etc.</li>
+              <li><strong>Brakes</strong> Brake lining thickness > 1/4 inch, no oil/grease between drums and linings, push road free play < 1 inch when brakes released, no air leaks in brake chambers/hoses, no ABS wire cuts</li>
+              <li><strong>Suspension:</strong> Check for missing leaf springs, damaged/leaking shock absorbers, broken hangers/u-bolts, deflated air springs, etc.</li>
+              <li><strong>Steering:</strong> Check for lose steering shaft (< 2 inch of free play), broken, bend steering linkage, leaking pump, gear box, etc. </li>
+              <li><strong>Gear/Belt driven components/Driving:</strong> Check for belt free play (< 3/4 inch), see no cracks, leaks or damages to air compressor, steering pump, alternator, A/C compressors, water pump, etc. </li>
+              <li><strong>Exhaust and Drive shaft:</strong> Check exhaust system for black sooth, holes, damages. Check drive shaft for no bends, dents, proper u-joint connectors </li>
+              <li><strong>Coupling:</strong> Check for air and electrical hoses, 5th wheel components </li>
+              <li><strong>Unusual Signs:</strong> If you notice unusual sounds, smells, or vibrations while driving, stop and check immediately. These are warning signs of potential failures.</li>
+            </ul>
+          </div>
+
+          <h3>3. Brake Systems and Air Pressure</h3>
+
+          <p>Your brake system is the most critical safety component on your vehicle. Understanding how it works and how to test it properly can save lives.</p>
+
+          <p><strong>Service Brakes:</strong> The service brake is your primary braking system. It's what you use for normal stopping under all driving conditions.</p>
+
+          <p><strong>Air Brake Testing:</strong></p>
+          <ul>
+          	<li>Air brake tests are essential for the safety: perform air leak test, low air pressure warning and spring emergency tests, parking and service brakes tests</li>
+            <li>Air pressure should build from 50 to 90 PSI in approximately 3 minutes</li>
+            <li>For hydraulic brakes, hold the pedal for 5 seconds during testing</li>
+            <li>Pulling the trailer brake lever harder does NOT increase trailer braking force</li>
+            <li>If the ABS light stays on, your ABS is not working properly and needs immediate attention</li>
+          </ul>
+
+          <h3>4. Gauges and Instrument Panel</h3>
+
+          <p>Your dashboard gauges provide real-time information about your vehicle's systems. Understanding what each gauge monitors helps you detect problems early.</p>
+
+          <ul>
+          	<li><strong>Warning Lights:</strong> Always investigate illuminated warning lights immediately</li>
+            <li><strong>Temperature Gauges:</strong> Monitor engine coolant and oil temperatures</li>
+            <li><strong>Pressure Gauges:</strong> Monitor engine and transmission pressure</li>
+            <li><strong>Tachometer/Speedometer Gauges:</strong> Monitor engine rev and speed</li>
+            <li><strong>Fuel Gauges:</strong> Monitor fuel levels such as diesel, DEF, etc.</li>
+            <li><strong>Voltagmeter/Amperemeter Gauges:</strong> Shows the electrical system's operating voltages and current</li>
+            <li><strong>Air Pressure Gauges:</strong> Primary and Secondary: critical for air brake-equipped vehicles</li>
+          </ul>
+
+          <h3>5. Visibility and Mirror Adjustment</h3>
+
+          <p>Proper visibility is essential for safe operation of large commercial vehicles. Before every trip, ensure maximum visibility by properly adjusting your seating position and mirrors.</p>
+
+          <div class="highlight-box">
+            <strong>Mirror and Visibility Checklist:</strong>
+            <ul style="margin: 10px 0 0 0;">
+              <li>Adjust seat for optimal reach and visibility</li>
+              <li>Position mirrors to minimize blind spots</li>
+              <li>Keep mirrors and windshield clean at all times</li>
+              <li>During turns, continuously watch the rear of your trailer in mirrors</li>
+            </ul>
+          </div>
+
+          <h3>6. Bridge Clearances and Road Hazards</h3>
+
+          <p>Commercial vehicles face unique challenges related to height and weight restrictions. Low bridge signs may be inaccurate, so always know your vehicle height and add a safety margin. The bridge weight formula was created specifically to protect older bridges from overloading.</p>
+
+          <h3>7. Backing Procedures</h3>
+
+          <p>Backing is one of the most dangerous maneuvers in trucking and should be avoided whenever possible because it significantly increases accident risk.</p>
+
+          <p><strong>Safe Backing Practices:</strong></p>
+          <ul>
+            <li><strong>Starting Position:</strong> Your starting position matters critically for successful backing</li>
+            <li><strong>G.O.A.L. (Get Out And Look):</strong> Always get out and look before backing to verify your path is clear</li>
+            <li><strong>Blind Side Backing:</strong> More dangerous because visibility is severely reduced</li>
+            <li><strong>Spotters:</strong> Using a spotter is helpful, but remember you remain responsible for the maneuver</li>
+            <li><strong>Speed:</strong> Always use the lowest reverse gear when backing</li>
+            <li><strong>Final Check:</strong> Be 100% sure nothing is behind you before beginning to back</li>
+          </ul>
+
+          <h3>8. Transmission and Shifting Techniques</h3>
+
+          <p>Proper shifting technique is crucial for preventing equipment damage and maintaining control of your vehicle, especially with non-synchronized transmissions common in heavy trucks.</p>
+
+          <p><strong>Non-Synced Transmission Techniques:</strong></p>
+          <ul>
+            <li>Press clutch only 2-3 inches (not to the floor) when shifting</li>
+            <li>If you miss a gear, release the clutch and try again - don't keep it pressed</li>
+            <li>When downshifting, drop RPM to approximately 700 before shifting to neutral</li>
+            <li>Master proper shifting to prevent transmission wear and damage</li>
+          </ul>
+
+          <h3>9. Interstate and Space Management</h3>
+
+          <p>Highway driving requires constant vigilance despite the seemingly simple straight roads. On the interstate, you must stay alert and continuously scan ahead for hazards. Never relax your attention.</p>
+
+          <p>In tight areas, always have an exit strategy planned. Know where you can go if you need to avoid a hazard quickly.</p>
+
+          <h3>10. Cargo Inspection Schedule</h3>
+
+          <p>After starting your trip, perform your first cargo inspection at 50 miles. This early check ensures your load hasn't shifted and all securement devices remain properly tensioned after initial road vibration and settling.</p>
+
+          <h3>11. Coupling and Uncoupling Procedures</h3>
+
+          <p>Coupling and uncoupling a tractor-trailer requires careful attention to safety procedures. Different rigs may have different specific procedures, so always follow the manufacturer's guidelines for your equipment.</p>
+
+          <div class="warning-box">
+            <strong>Critical Coupling Safety Steps:</strong>
+            <ul style="margin: 10px 0 0 0;">
+              <li>Before coupling: Inspect the area and chock wheels</li>
+              <li>When backing under trailer: Use lowest reverse gear, back slowly, stop when kingpin locks</li>
+              <li>Visually inspect the coupling to ensure it is secure</li>
+              <li>Check both electrical cord AND air lines for proper connection</li>
+              <li>Check trailer clearance after raising landing gear to avoid damage</li>
+              <li>Final step: Remove wheel chocks before departure</li>
+            </ul>
+          </div>
+
+          <div class="warning-box">
+            <strong>Critical Uncoupling Safety Steps:</strong>
+            <ul style="margin: 10px 0 0 0;">
+              <li>Before unlocking fifth wheel: Position rig correctly AND ease pressure on locking jaws</li>
+              <li>Chock trailer wheels if it has no spring brakes</li>
+              <li>Keep your feet clear of tractor wheels when unlocking fifth wheel (crush hazard)</li>
+              <li>Keep tractor under trailer until landing gear is confirmed stable</li>
+              <li>Secure the tractor before inspecting trailer supports</li>
+              <li>When inspecting supports: Check both ground support AND landing gear condition</li>
+              <li>Only after confirming landing gear is stable is it safe to pull tractor away</li>
+            </ul>
+          </div>
+
+          <h3>12. Vehicle Size Considerations</h3>
+
+          <p>Wider vehicles have less room for error on roads and in tight spaces. Every inch matters when maneuvering large commercial vehicles. Extra width means reduced margins for error in lane positioning, turns, and parking.</p>
+
+          <div class="success-box">
+            <strong>Key Takeaways for Section 1:</strong>
+            <ul style="margin: 10px 0 0 0;">
+              <li>You are responsible for vehicle and cargo safety</li>
+              <li>Pre-trip inspections prevent accidents and breakdowns</li>
+              <li>Proper brake testing can save lives</li>
+              <li>Visibility and mirror adjustment are critical before every trip</li>
+              <li>Backing should be minimized and performed with extreme caution</li>
+              <li>Master shifting techniques to prevent equipment damage</li>
+              <li>Coupling/uncoupling requires strict adherence to safety procedures</li>
+              <li>Always maintain awareness of your vehicle's size and limitations</li>
+            </ul>
+          </div>
+        `;
+	  }
+      if (id === 2) {
+        return `
+          <h2>Safe Operating Procedures</h2>
+
+          <p>This section focuses on the daily operational practices that keep you, your cargo, and other road users safe. Safe operating procedures encompass situational awareness, proper following distances, speed management, distracted driving prevention, and handling adverse conditions.</p>
+
+          <div class="highlight-box">
+            <strong>Core Principle:</strong> Professional drivers must remain constantly aware of their surroundings and maintain safe operating practices in all conditions. A moment of inattention can result in injury or death to you or others.
+          </div>
+
+          <h3>1. Situational Awareness and Visual Scanning</h3>
+
+          <p>You should always be aware of your surroundings when driving a CMV. This isn't optional—it's a fundamental requirement for safe operation. Maintaining awareness means continuously scanning your environment, checking mirrors, and monitoring conditions ahead, beside, and behind your vehicle.</p>
+
+          <p><strong>How Far Ahead Should You Look?</strong></p>
+          <p>When driving a commercial vehicle, you should look 12-15 seconds ahead. This gives you adequate time to identify hazards, process information, and execute appropriate responses. At highway speeds, 12-15 seconds translates to approximately a quarter mile ahead.</p>
+
+          <h3>2. Mirror Use and Convex Mirror Properties</h3>
+
+          <p>Checking your mirrors regularly is essential—it is never acceptable to drive without checking your mirrors regularly, even on straight, empty roads. Conditions change rapidly, and vehicles can enter your space quickly.</p>
+
+          <div class="warning-box">
+            <strong>Important Mirror Fact:</strong> Objects in convex mirrors appear further than they are. This optical effect helps eliminate blind spots but means vehicles are actually closer than they appear in these mirrors. Always account for this when changing lanes or merging.
+          </div>
+
+          <h3>3. Signaling and Communication</h3>
+
+          <p>Proper communication with other road users is critical for safety:</p>
+          <ul>
+            <li><strong>Lane Changes:</strong> Signal and wait for traffic to clear before moving. Never signal and immediately move.</li>
+            <li><strong>Hand Signals:</strong> It is not acceptable to wave your hands out the window to direct traffic, even in emergencies. Use proper signals and warning devices.</li>
+            <li><strong>Headlights:</strong> Use headlights during the day when visibility is low to increase your visibility to other drivers.</li>
+          </ul>
+
+          <h3>4. Emergency Warning Devices</h3>
+
+          <p>When you must stop on the roadway or shoulder, you have 10 minutes to place emergency warning devices. This requirement protects you and warns other drivers.</p>
+
+          <p><strong>Standard Placement on Two-Way Highways:</strong></p>
+          <p>Place warning devices 10 feet from your vehicle and 100 feet ahead and behind your vehicle. If the view is obstructed (such as around curves or over hills), place the last device 100-500 feet back depending on the obstruction to give approaching drivers adequate warning.</p>
+
+          <h3>5. Distracted Driving</h3>
+
+          <p>Distracted driving is anything that takes your attention away from driving. This includes visual distractions (taking your eyes off the road), manual distractions (taking your hands off the wheel), and cognitive distractions (taking your mind off driving).</p>
+
+          <div class="danger-box" style="background: rgba(239, 68, 68, 0.15); border-left: 4px solid var(--danger); padding: 18px; margin: 20px 0; border-radius: 8px;">
+            <strong>Critical Safety Fact:</strong> If you are not focused while operating a CMV, the likely outcome is injury or death to you or others. Professional drivers must always pull over before checking a mobile device. To be a professional driver, you must stay focused and avoid distractions at all times.
+          </div>
+
+          <p>It is your responsibility to watch out for other distracted drivers. Anticipate erratic behavior and give distracted drivers extra space.</p>
+
+          <h3>6. Stopping Distance Components</h3>
+
+          <p>Understanding stopping distance is critical for maintaining safe following distances and avoiding collisions. Total stopping distance consists of three components:</p>
+
+          <p><strong>Perception Distance:</strong> The distance your vehicle travels from the time your eyes see a hazard until your brain recognizes it. For an alert driver, perception time is about 3/4 second. At 55 mph, you travel 60 feet during perception time.</p>
+
+          <p><strong>Reaction Distance:</strong> The distance traveled from the time your brain recognizes the hazard until your foot physically moves to the brake pedal. Average human reaction time to a hazard is about 0.75-1 second. At 55 mph, this adds another 60 feet.</p>
+
+          <p><strong>Braking Distance:</strong> The distance it takes to stop once the brakes are applied. This varies based on speed, weight, road conditions, and brake condition.</p>
+
+          <div class="highlight-box">
+            <strong>Total Stopping Distance at 55 MPH:</strong> At 55 mph in ideal conditions, total stopping distance is closest to 419 feet. This is longer than a football field! Remember: Perception (60 ft) + Reaction (60 ft) + Braking (approximately 300 ft) = Total Stopping Distance (419 ft)
+          </div>
+
+          <p><strong>Speed and Stopping Distance:</strong> By slowing down, you can significantly reduce braking distance. When you double your speed, stopping distance increases by approximately four times.</p>
+
+          <h3>7. Empty vs. Loaded Vehicle Stopping</h3>
+
+          <p>This is counterintuitive but critical to understand: Empty vehicles require greater stopping distance than loaded vehicles. While heavier vehicles have more momentum, empty trucks have less traction between the tires and road, which means they can lock up and skid more easily, especially on wet or slippery surfaces.</p>
+
+          <h3>8. Following Distance</h3>
+
+          <p>Proper following distance is your best defense against rear-end collisions. The FMCSA recommends that commercial drivers maintain at least one second for every 10 feet of vehicle length, plus an additional second for speeds over 40 mph.</p>
+
+          <p><strong>Example Calculation:</strong> For a 40-foot vehicle at 50 mph in ideal conditions, the recommended following distance is 5 seconds (4 seconds for vehicle length + 1 additional second for speed over 40 mph).</p>
+
+          <div class="success-box">
+            <strong>How to Measure Following Distance:</strong>
+            <ol style="margin: 10px 0 0 20px;">
+              <li>Pick a fixed object ahead (sign, bridge, tree)</li>
+              <li>When the vehicle ahead passes it, start counting seconds</li>
+              <li>Stop counting when your vehicle reaches that object</li>
+              <li>Adjust your speed to maintain proper following distance</li>
+            </ol>
+          </div>
+
+          <h3>9. Dealing with Tailgaters</h3>
+
+          <p>If a vehicle is tailgating you in bad weather, find a safe place to pull over and let them pass. Never "brake check" a tailgater—this dangerous practice can cause serious accidents. You cannot control others who follow too closely, but you can manage the situation safely by allowing them to pass.</p>
+
+          <h3>10. Speed Management</h3>
+
+          <p>Professional speed management goes beyond following posted limits—it means adjusting speed for conditions:</p>
+
+          <ul>
+            <li><strong>Uncertain Conditions:</strong> If you're not sure of road conditions, slow down</li>
+            <li><strong>Curves:</strong> Never exceed the posted speed limit for a curve, even if you feel confident</li>
+            <li><strong>Night Driving:</strong> If you must use low beams at night, reduce speed to allow more reaction time</li>
+            <li><strong>Split Speed Limits:</strong> Where trucks are required to go slower than cars, be extra careful when changing lanes</li>
+            <li><strong>Grades:</strong> On steep grades, be in a lower gear before starting the grade</li>
+            <li><strong>Work Zones:</strong> Never speed in work zones—penalties are severe and workers' lives depend on your compliance</li>
+          </ul>
+
+          <h3>11. Space Management</h3>
+
+          <p>Maintain space ahead—always watch the space in front of your vehicle. If you see brake lights ahead, apply brakes early and smoothly to avoid sudden stops. Staying centered in your lane helps avoid other traffic, and checking mirrors to see your trailer helps you stay centered.</p>
+
+          <p><strong>Vehicle Positioning Awareness:</strong></p>
+          <ul>
+            <li>It is not safe to have smaller vehicles traveling next to you—they may be in your blind spots</li>
+            <li>High winds can push you out of your lane regardless of vehicle size</li>
+            <li>Never assume posted overhead clearance heights are always correct—know your vehicle height</li>
+            <li>The clearance under your vehicle is important to monitor for railroad crossings and uneven terrain</li>
+          </ul>
+
+          <h3>12. Turning Procedures</h3>
+
+          <p>When making turns, watch your trailer in the mirrors through the whole turn to ensure it's tracking properly and not hitting obstacles. Before pulling into traffic, make sure traffic is clear and you have enough room for your vehicle's length and acceleration capabilities.</p>
+
+          <h3>13. Fatigue Management</h3>
+
+          <p>If you feel sleepy while driving, the best and only acceptable cure is to stop driving and sleep. Rolling windows down or turning music up are temporary measures that don't address the underlying problem. Drowsy driving is as dangerous as impaired driving.</p>
+
+          <h3>14. Pre-Trip Checks for Operating Conditions</h3>
+
+          <p>Before starting a trip, check coolant level, heating and defrost systems, wipers, and washer fluid. These systems are critical for maintaining visibility and preventing overheating, especially in adverse weather.</p>
+
+          <h3>15. Winter Weather Preparation and Operations</h3>
+
+          <p>You should learn how to put chains on before you need them. Practicing in good conditions prevents dangerous delays in bad weather. In bad weather, lack of spray from other vehicles may indicate ice on the road—this is a critical warning sign.</p>
+
+          <p><strong>Winter Driving Rules:</strong></p>
+          <ul>
+            <li>Never brake in corners during inclement weather—brake before the turn</li>
+            <li>Water in the brakes can cause them to become weak—test brakes after driving through deep water</li>
+            <li>In very hot weather, inspect tires every 2 hours or 100 miles to check for heat damage and proper inflation</li>
+          </ul>
+
+          <div class="success-box">
+            <strong>Key Takeaways for Section 2:</strong>
+            <ul style="margin: 10px 0 0 0;">
+              <li>Look 12-15 seconds ahead and check mirrors constantly</li>
+              <li>Objects in convex mirrors appear further than they actually are</li>
+              <li>Total stopping distance at 55 mph is approximately 419 feet</li>
+              <li>Empty trucks require more stopping distance than loaded trucks</li>
+              <li>Maintain 5 seconds following distance for a 40-foot vehicle at 50 mph</li>
+              <li>Distracted driving can result in injury or death</li>
+              <li>Adjust speed for all conditions, not just posted limits</li>
+              <li>Sleep is the only cure for drowsiness while driving</li>
+            </ul>
+          </div>
+        `;
+      }
+      return '<p>Content not available for this section.</p>';
+    }
+
+    function loadQuiz(id) {
+      if (!quizRegistry[id].questions.length) return alert("This section is empty.");
+      currentQuizId = id;
+      currentQIndex = 0;
+      sectionScores[id].needsReset = true;
+      renderQuizStep();
+    }
+
+    function renderQuizStep() {
+      const data = quizRegistry[currentQuizId];
+      const q = data.questions[currentQIndex];
+      const progress = ((currentQIndex + 1) / data.questions.length) * 100;
+
+      document.getElementById('contentArea').innerHTML = `
+        <div class="quiz-card">
+          <div class="quiz-header">
+            <span>Section ${currentQuizId}: Question ${currentQIndex + 1}/${data.questions.length}</span>
+            <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+          </div>
+          <div style="padding:30px">
+            <h3>${q.q}</h3>
+            <div id="quizForm">${Object.entries(q.options).map(([k,v]) => `
+              <label class="option"><input type="radio" name="ans" value="${k}"> <span>${v}</span></label>
+            `).join('')}</div>
+            <div id="feedback" class="feedback" style="display:none"></div>
+          </div>
+          <div style="padding:20px; border-top:1px solid var(--border); display:flex; justify-content:space-between">
+            <button class="btn btn-outline" onclick="showHome()">Back to Dashboard</button>
+            <div>
+               <button id="subBtn" class="btn btn-primary" onclick="submitAnswer()">Submit Answer</button>
+               <button id="nextBtn" class="btn btn-primary" style="display:none" onclick="nextQuestion()">Next Question</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function submitAnswer() {
+      const selected = document.querySelector('input[name="ans"]:checked');
+      if (!selected) return alert("Please select an option.");
+
+      const scoreObj = sectionScores[currentQuizId];
+
+      if (scoreObj.needsReset) {
+        scoreObj.correct = 0;
+        scoreObj.attempted = 0;
+        scoreObj.needsReset = false;
+      }
+
+      const isCorrect = selected.value === quizRegistry[currentQuizId].questions[currentQIndex].correct;
+      if (isCorrect) scoreObj.correct++;
+      scoreObj.attempted++;
+
+      document.getElementById('feedback').style.display = 'block';
+      document.getElementById('feedback').innerHTML = isCorrect ? "✓ Correct" : "✗ Incorrect";
+      document.getElementById('feedback').className = "feedback " + (isCorrect ? "correct" : "incorrect");
+
+      document.getElementById('subBtn').style.display = 'none';
+      document.getElementById('nextBtn').style.display = 'inline-block';
+
+      updateGlobalDisplay();
+    }
+
+    function nextQuestion() {
+      if (currentQIndex < quizRegistry[currentQuizId].questions.length - 1) {
+        currentQIndex++;
+        renderQuizStep();
+      } else {
+        document.getElementById('contentArea').innerHTML = `
+          <div class="quiz-card" style="padding:40px; text-align:center;">
+            <h2>Section Complete!</h2>
+            <p>Section Score: ${sectionScores[currentQuizId].correct} / ${quizRegistry[currentQuizId].questions.length}</p>
+            <button class="btn btn-primary" onclick="showHome()">Back to Dashboard</button>
+          </div>`;
+        updateGlobalDisplay();
+      }
+    }
+
+    function updateGlobalDisplay() {
+      let totalCorrect = 0;
+      let totalAttempted = 0;
+      const totalPossible = calculateTotalQuestions();
+
+      Object.entries(sectionScores).forEach(([id, s]) => {
+        totalCorrect += s.correct;
+        totalAttempted += s.attempted;
+
+        const label = document.getElementById(`quizLabel${id}`);
+        if (label) {
+          label.textContent = `Quiz (${s.correct} / ${quizRegistry[id].questions.length} Correct)`;
+        }
+      });
+
+      document.getElementById('globalCount').textContent = `${totalCorrect} / ${totalPossible} Correct`;
+
+      const pct = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
+      const pctEl = document.getElementById('pctBox');
+      pctEl.textContent = pct + "%";
+
+      document.getElementById('attemptedBox').textContent = `Total Attempted: ${totalAttempted}`;
+
+      if (totalAttempted >= (totalPossible * 0.8)) {
+        pctEl.style.color = (pct >= 80) ? 'var(--accent)' : 'var(--danger)';
+      } else {
+        pctEl.style.color = 'inherit';
+      }
+    }
+
+    window.onload = initSidebar;
+  </script>
+</body>
+</html>
