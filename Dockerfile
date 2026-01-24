@@ -21,8 +21,8 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Expose port
-EXPOSE 3000
+# Expose port 80 for web traffic
+EXPOSE 80
 
 # Start the application
 CMD ["npm", "start"]
