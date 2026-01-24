@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files first (for better caching)
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies for production
+RUN npm ci --omit=dev
 
 # Copy application files
 COPY . .
