@@ -213,13 +213,23 @@ app.post('/api/saveResults', async (req, res) => {
       });
     }
 
-    // Create filename: results.$licenseNumber.$recordId.$firstName.$lastName.html
+    // Create filename: results.$licenseNumber.$recordId.$firstName.$lastName.YYYYMMDD.hhmmss.html
     const sanitizedFirstName = firstName.replace(/[^a-zA-Z0-9]/g, '');
     const sanitizedLastName = lastName.replace(/[^a-zA-Z0-9]/g, '');
     const sanitizedLicenseNumber = licenseNumber.replace(/[^a-zA-Z0-9]/g, '');
     const sanitizedRecordId = recordId.replace(/[^a-zA-Z0-9]/g, '');
     
-    const filename = `results.${sanitizedLicenseNumber}.${sanitizedRecordId}.${sanitizedFirstName}.${sanitizedLastName}.html`;
+    // Create date timestamp: YYYYMMDD.hhmmss
+    const now = new Date();
+    const dateStamp = now.getFullYear().toString() + 
+                     (now.getMonth() + 1).toString().padStart(2, '0') + 
+                     now.getDate().toString().padStart(2, '0');
+    const timeStamp = now.getHours().toString().padStart(2, '0') + 
+                     now.getMinutes().toString().padStart(2, '0') + 
+                     now.getSeconds().toString().padStart(2, '0');
+    const timestamp = `${dateStamp}.${timeStamp}`;
+    
+    const filename = `results.${sanitizedLicenseNumber}.${sanitizedRecordId}.${sanitizedFirstName}.${sanitizedLastName}.${timestamp}.html`;
     const filePath = path.join(__dirname, 'results', filename);
     
     console.log(`   📁 Filename: ${filename}`);
