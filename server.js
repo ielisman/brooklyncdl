@@ -11,6 +11,28 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static('.'));
 
+// Add request logging middleware
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`\n[${timestamp}] ${req.method} ${req.url}`);
+  
+  if (req.method !== 'GET') {
+    console.log(`   Headers: ${JSON.stringify(req.headers, null, 2)}`);
+    if (req.body && Object.keys(req.body).length > 0) {
+      const bodyLog = { ...req.body };
+      // Don't log full HTML content, just indicate presence
+      if (bodyLog.htmlContent) {
+        bodyLog.htmlContent = `[HTML Content - ${bodyLog.htmlContent.length} characters]`;
+      }
+      if (bodyLog.textContent) {
+        bodyLog.textContent = `[Text Content - ${bodyLog.textContent.length} characters]`;
+      }
+      console.log(`   Body: ${JSON.stringify(bodyLog, null, 2)}`);
+    }
+  }
+  next();
+});
+
 // Add CORS headers for deployment
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -44,7 +66,11 @@ app.get('/api/health', (req, res) => {
 
 // Email endpoint that uses server-side environment variables
 app.post('/api/send-email', async (req, res) => {
-  console.log('Email request received:', { subject: req.body.subject, hasHtmlContent: !!req.body.htmlContent });
+  const requestId = Date.now().toString(36);
+  console.log(`\n🔵 [${requestId}] EMAIL REQUEST STARTED`);
+  console.log(`   📧 Subject: ${req.body.subject || 'No subject'}`);
+  console.log(`   📄 HTML Content: ${req.body.htmlContent ? req.body.htmlContent.length + ' characters' : 'Not provided'}`);
+  console.log(`   📝 Text Content: ${req.body.textContent ? req.body.textContent.length + ' characters' : 'Not provided'}`);
   
   try {
     const { htmlContent, textContent, subject } = req.body;
@@ -55,15 +81,23 @@ app.post('/api/send-email', async (req, res) => {
     const MAILGUN_API_URL = `https://api.mailgun.net/v3/${MAILGUN_DOMAIN}/messages`;
     const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL || 'info@brooklyncdl.com';
     
-    console.log('Using Mailgun domain:', MAILGUN_DOMAIN);
-    console.log('Sending to recipient:', RECIPIENT_EMAIL);
+    console.log(`   🌐 Using Mailgun Domain: ${MAILGUN_DOMAIN}`);
+    console.log(`   📮 Sending to Recipient: ${RECIPIENT_EMAIL}`);
+    console.log(`   🔗 API URL: ${MAILGUN_API_URL}`);
+    console.log(`   🔑 API Key Status: ${MAILGUN_API_KEY ? 'Present (' + MAILGUN_API_KEY.substring(0, 8) + '...)' : 'Missing!'}`);
 
     // Validate required environment variables
     if (!MAILGUN_DOMAIN || !MAILGUN_API_KEY) {
+      console.log(`❌ [${requestId}] VALIDATION FAILED - Missing environment variables`);
+      console.log(`   Domain present: ${!!MAILGUN_DOMAIN}`);
+      console.log(`   API Key present: ${!!MAILGUN_API_KEY}`);
       return res.status(500).json({ 
-        error: 'Missing Mailgun configuration. Please check environment variables.' 
+        error: 'Missing Mailgun configuration. Please check environment variables.',
+        requestId: requestId
       });
     }
+
+    console.log(`✅ [${requestId}] Environment validation passed`);
 
     // Create form data for Mailgun API
     const formData = new FormData();
@@ -74,7 +108,13 @@ app.post('/api/send-email', async (req, res) => {
     formData.append('text', textContent);
 
     // Send email via Mailgun
-    console.log('Sending request to:', MAILGUN_API_URL);
+    console.log(`📤 [${requestId}] Sending request to Mailgun API...`);
+    console.log(`   📍 URL: ${MAILGUN_API_URL}`);
+    console.log(`   👤 From: Brooklyn CDL ELDT <postmaster@${MAILGUN_DOMAIN}>`);
+    console.log(`   👤 To: ${RECIPIENT_EMAIL}`);
+    console.log(`   📋 Subject: ${subject || 'ELDT Score Submission'}`);
+    
+    const startTime = Date.now();
     const response = await fetch(MAILGUN_API_URL, {
       method: 'POST',
       headers: {
@@ -84,22 +124,68 @@ app.post('/api/send-email', async (req, res) => {
       body: formData
     });
     
-    console.log('Mailgun response status:', response.status);
+    const responseTime = Date.now() - startTime;
+    console.log(`⏱️ [${requestId}] Mailgun API response received in ${responseTime}ms`);
+    console.log(`   📊 Status Code: ${response.status}`);
+    console.log(`   📊 Status Text: ${response.statusText}`);
 
     if (response.ok) {
       const result = await response.json();
-      console.log('Email sent successfully:', result);
-      res.json({ success: true, message: 'Email sent successfully!', data: result });
+      console.log(`🟢 [${requestId}] EMAIL SENT SUCCESSFULLY!`);
+      console.log(`   📬 Mailgun Message ID: ${result.id || 'N/A'}`);
+      console.log(`   📝 Full Response:`, JSON.stringify(result, null, 2));
+      res.json({ 
+        success: true, 
+        message: 'Email sent successfully!', 
+        data: result,
+        requestId: requestId
+      });
     } else {
       const error = await response.text();
-      console.error('Failed to send email:', error);
-      res.status(400).json({ success: false, error: 'Failed to send email', details: error });
+      console.log(`🔴 [${requestId}] MAILGUN API ERROR`);
+      console.log(`   📊 Status: ${response.status} - ${response.statusText}`);
+      console.log(`   📄 Error Details:`, error);
+      
+      // Try to parse error as JSON for better logging
+      try {
+        const errorObj = JSON.parse(error);
+        console.log(`   🔍 Parsed Error:`, JSON.stringify(errorObj, null, 2));
+      } catch (e) {
+        console.log(`   🔍 Raw Error Text: ${error}`);
+      }
+      
+      res.status(400).json({ 
+        success: false, 
+        error: 'Failed to send email', 
+        details: error,
+        requestId: requestId
+      });
     }
 
   } catch (error) {
-    console.error('Server error sending email:', error.message);
-    console.error('Full error:', error);
-    res.status(500).json({ success: false, error: 'Server error sending email', details: error.message });
+    console.log(`💥 [${requestId}] SERVER ERROR OCCURRED`);
+    console.log(`   🔍 Error Type: ${error.constructor.name}`);
+    console.log(`   💬 Error Message: ${error.message}`);
+    console.log(`   📍 Stack Trace:`);
+    console.log(error.stack);
+    
+    // Additional context for common errors
+    if (error.code) {
+      console.log(`   🔧 Error Code: ${error.code}`);
+    }
+    if (error.errno) {
+      console.log(`   🔧 Error Number: ${error.errno}`);
+    }
+    if (error.syscall) {
+      console.log(`   🔧 System Call: ${error.syscall}`);
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error sending email', 
+      details: error.message,
+      requestId: requestId
+    });
   }
 });
 
