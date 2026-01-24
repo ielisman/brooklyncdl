@@ -1,0 +1,24 @@
+# Exclude sensitive files from Docker build
+.env
+.env.local
+.env.*.local
+
+# Exclude development files
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Exclude Git files
+.git
+.gitignore
+
+# Exclude OS files
+.DS_Store
+Thumbs.db
+
+# Exclude editor files
+.vscode
+.idea
+*.swp
+*.swo

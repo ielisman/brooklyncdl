@@ -10,7 +10,7 @@ COPY package*.json ./
 # Install dependencies for production
 RUN npm install --omit=dev
 
-# Copy application files
+# Copy application files (including .env)
 COPY . .
 
 # Create non-root user for security
