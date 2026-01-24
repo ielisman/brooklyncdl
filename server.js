@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const FormData = require('form-data');
 const fetch = require('node-fetch');
 require('dotenv').config();
@@ -183,6 +184,84 @@ app.post('/api/send-email', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: 'Server error sending email', 
+      details: error.message,
+      requestId: requestId
+    });
+  }
+});
+
+// Save results endpoint - saves HTML content to file
+app.post('/api/saveResults', async (req, res) => {
+  const requestId = Date.now().toString(36);
+  console.log(`\n💾 [${requestId}] SAVE RESULTS REQUEST STARTED`);
+  
+  try {
+    const { htmlContent, licenseNumber, recordId, firstName, lastName } = req.body;
+    
+    console.log(`   📄 Content Length: ${htmlContent ? htmlContent.length + ' characters' : 'Not provided'}`);
+    console.log(`   📝 License Number: ${licenseNumber || 'Not provided'}`);
+    console.log(`   🔢 Record ID: ${recordId || 'Not provided'}`);
+    console.log(`   👤 Name: ${firstName || 'N/A'} ${lastName || 'N/A'}`);
+
+    // Validate required fields
+    if (!htmlContent || !licenseNumber || !recordId || !firstName || !lastName) {
+      console.log(`❌ [${requestId}] VALIDATION FAILED - Missing required fields`);
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: htmlContent, licenseNumber, recordId, firstName, lastName',
+        requestId: requestId
+      });
+    }
+
+    // Create filename: results.$licenseNumber.$recordId.$firstName.$lastName.html
+    const sanitizedFirstName = firstName.replace(/[^a-zA-Z0-9]/g, '');
+    const sanitizedLastName = lastName.replace(/[^a-zA-Z0-9]/g, '');
+    const sanitizedLicenseNumber = licenseNumber.replace(/[^a-zA-Z0-9]/g, '');
+    const sanitizedRecordId = recordId.replace(/[^a-zA-Z0-9]/g, '');
+    
+    const filename = `results.${sanitizedLicenseNumber}.${sanitizedRecordId}.${sanitizedFirstName}.${sanitizedLastName}.html`;
+    const filePath = path.join(__dirname, 'results', filename);
+    
+    console.log(`   📁 Filename: ${filename}`);
+    console.log(`   📍 Full Path: ${filePath}`);
+
+    // Ensure results directory exists
+    const resultsDir = path.join(__dirname, 'results');
+    if (!fs.existsSync(resultsDir)) {
+      console.log(`   📁 Creating results directory: ${resultsDir}`);
+      fs.mkdirSync(resultsDir, { recursive: true });
+    }
+
+    // Write HTML content to file
+    console.log(`   💾 Writing file...`);
+    const startTime = Date.now();
+    
+    fs.writeFileSync(filePath, htmlContent, 'utf8');
+    
+    const writeTime = Date.now() - startTime;
+    console.log(`   ⏱️ File written in ${writeTime}ms`);
+    console.log(`   📊 File size: ${fs.statSync(filePath).size} bytes`);
+    console.log(`🟢 [${requestId}] FILE SAVED SUCCESSFULLY!`);
+
+    res.json({
+      success: true,
+      message: 'Results saved successfully!',
+      filename: filename,
+      filePath: filePath,
+      fileSize: fs.statSync(filePath).size,
+      requestId: requestId
+    });
+
+  } catch (error) {
+    console.log(`💥 [${requestId}] SERVER ERROR OCCURRED`);
+    console.log(`   🔍 Error Type: ${error.constructor.name}`);
+    console.log(`   💬 Error Message: ${error.message}`);
+    console.log(`   📍 Stack Trace:`);
+    console.log(error.stack);
+    
+    res.status(500).json({
+      success: false,
+      error: 'Server error saving results',
       details: error.message,
       requestId: requestId
     });
