@@ -196,28 +196,26 @@ app.post('/api/saveResults', async (req, res) => {
   console.log(`\n💾 [${requestId}] SAVE RESULTS REQUEST STARTED`);
   
   try {
-    const { htmlContent, licenseNumber, recordId, firstName, lastName } = req.body;
+    const { htmlContent, licenseNumber, firstName, lastName } = req.body;
     
     console.log(`   📄 Content Length: ${htmlContent ? htmlContent.length + ' characters' : 'Not provided'}`);
     console.log(`   📝 License Number: ${licenseNumber || 'Not provided'}`);
-    console.log(`   🔢 Record ID: ${recordId || 'Not provided'}`);
     console.log(`   👤 Name: ${firstName || 'N/A'} ${lastName || 'N/A'}`);
 
     // Validate required fields
-    if (!htmlContent || !licenseNumber || !recordId || !firstName || !lastName) {
+    if (!htmlContent || !licenseNumber || !firstName || !lastName) {
       console.log(`❌ [${requestId}] VALIDATION FAILED - Missing required fields`);
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields: htmlContent, licenseNumber, recordId, firstName, lastName',
+        error: 'Missing required fields: htmlContent, licenseNumber, firstName, lastName',
         requestId: requestId
       });
     }
 
-    // Create filename: results.$licenseNumber.$recordId.$firstName.$lastName.YYYYMMDD.hhmmss.html
+    // Create filename: results.$licenseNumber.$firstName.$lastName.YYYYMMDD.hhmmss.html
     const sanitizedFirstName = firstName.replace(/[^a-zA-Z0-9]/g, '');
     const sanitizedLastName = lastName.replace(/[^a-zA-Z0-9]/g, '');
     const sanitizedLicenseNumber = licenseNumber.replace(/[^a-zA-Z0-9]/g, '');
-    const sanitizedRecordId = recordId.replace(/[^a-zA-Z0-9]/g, '');
     
     // Create date timestamp: YYYYMMDD.hhmmss
     const now = new Date();
@@ -229,7 +227,7 @@ app.post('/api/saveResults', async (req, res) => {
                      now.getSeconds().toString().padStart(2, '0');
     const timestamp = `${dateStamp}.${timeStamp}`;
     
-    const filename = `results.${sanitizedLicenseNumber}.${sanitizedRecordId}.${sanitizedFirstName}.${sanitizedLastName}.${timestamp}.html`;
+    const filename = `results.${sanitizedLicenseNumber}.${sanitizedFirstName}.${sanitizedLastName}.${timestamp}.html`;
     const filePath = path.join(__dirname, 'results', filename);
     
     console.log(`   📁 Filename: ${filename}`);
