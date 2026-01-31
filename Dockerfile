@@ -13,6 +13,9 @@ RUN npm install --omit=dev
 # Copy application files (including .env)
 COPY . .
 
+# Copy external .env file (NOT RECOMMENDED - exposes secrets)
+# COPY .env .env
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 -G nodejs
@@ -21,8 +24,11 @@ RUN addgroup -g 1001 -S nodejs && \
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Expose port 80 for web traffic
+# Set environment variable for internal port
+ENV PORT=3000
+
+# Expose port 80 for external web server access
 EXPOSE 80
 
-# Start the application
+# Start the npm server
 CMD ["npm", "start"]

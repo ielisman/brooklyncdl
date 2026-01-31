@@ -77,6 +77,7 @@
     .form-group input { width: 100%; padding: 12px; background: #0b1221; border: 1px solid var(--border); 
       border-radius: 8px; color: var(--text); font-size: 1rem; }
     .form-group input:focus { outline: none; border-color: var(--primary); }
+    .form-group datalist { background: var(--card); }
     .error-msg { color: var(--danger); font-size: 0.875rem; margin-top: 5px; display: none; }
     
     .submit-scores-btn { position: fixed; bottom: 20px; right: 20px; z-index: 150; 
@@ -325,6 +326,7 @@
       lastName: '',
       dob: '',
       licenseNumber: '',
+      state: '',
       email: '',
       phone: '',
       registerDate: '',
@@ -372,6 +374,70 @@
             </div>
             
             <div class="form-group">
+              <label for="state">State *</label>
+              <input type="text" id="state" list="states" required autocomplete="address-level1">
+              <datalist id="states">
+                <option value="US-AL">Alabama</option>
+                <option value="US-AK">Alaska</option>
+                <option value="US-AZ">Arizona</option>
+                <option value="US-AR">Arkansas</option>
+                <option value="US-CA">California</option>
+                <option value="US-CO">Colorado</option>
+                <option value="US-CT">Connecticut</option>
+                <option value="US-DE">Delaware</option>
+                <option value="US-FL">Florida</option>
+                <option value="US-GA">Georgia</option>
+                <option value="US-HI">Hawaii</option>
+                <option value="US-ID">Idaho</option>
+                <option value="US-IL">Illinois</option>
+                <option value="US-IN">Indiana</option>
+                <option value="US-IA">Iowa</option>
+                <option value="US-KS">Kansas</option>
+                <option value="US-KY">Kentucky</option>
+                <option value="US-LA">Louisiana</option>
+                <option value="US-ME">Maine</option>
+                <option value="US-MD">Maryland</option>
+                <option value="US-MA">Massachusetts</option>
+                <option value="US-MI">Michigan</option>
+                <option value="US-MN">Minnesota</option>
+                <option value="US-MS">Mississippi</option>
+                <option value="US-MO">Missouri</option>
+                <option value="US-MT">Montana</option>
+                <option value="US-NE">Nebraska</option>
+                <option value="US-NV">Nevada</option>
+                <option value="US-NH">New Hampshire</option>
+                <option value="US-NJ">New Jersey</option>
+                <option value="US-NM">New Mexico</option>
+                <option value="US-NY">New York</option>
+                <option value="US-NC">North Carolina</option>
+                <option value="US-ND">North Dakota</option>
+                <option value="US-OH">Ohio</option>
+                <option value="US-OK">Oklahoma</option>
+                <option value="US-OR">Oregon</option>
+                <option value="US-PA">Pennsylvania</option>
+                <option value="US-RI">Rhode Island</option>
+                <option value="US-SC">South Carolina</option>
+                <option value="US-SD">South Dakota</option>
+                <option value="US-TN">Tennessee</option>
+                <option value="US-TX">Texas</option>
+                <option value="US-UT">Utah</option>
+                <option value="US-VT">Vermont</option>
+                <option value="US-VA">Virginia</option>
+                <option value="US-WA">Washington</option>
+                <option value="US-WV">West Virginia</option>
+                <option value="US-WI">Wisconsin</option>
+                <option value="US-WY">Wyoming</option>
+                <option value="US-DC">District of Columbia</option>
+                <option value="US-PR">Puerto Rico</option>
+                <option value="US-VI">Virgin Islands</option>
+                <option value="US-AS">American Samoa</option>
+                <option value="US-GU">Guam</option>
+                <option value="US-MP">Northern Mariana Islands</option>
+              </datalist>
+              <div class="error-msg" id="stateError"></div>
+            </div>
+            
+            <div class="form-group">
               <label for="email">Email *</label>
               <input type="email" id="email" required>
               <div class="error-msg" id="emailError"></div>
@@ -405,6 +471,7 @@
       const dob = document.getElementById('dob').value;
       const licenseNumber = document.getElementById('licenseNumber').value.trim();
       const retypeLicenseNumber = document.getElementById('retypeLicenseNumber').value.trim();
+      const state = document.getElementById('state').value.trim();
       const email = document.getElementById('email').value.trim();
       const phone = document.getElementById('phone').value.trim();
       
@@ -441,6 +508,12 @@
         isValid = false;
       }
       
+      // Validate State
+      if (!state) {
+        showError('stateError', 'State is required');
+        isValid = false;
+      }
+      
       // Validate Email
       if (!email) {
         showError('emailError', 'Email is required');
@@ -462,6 +535,7 @@
         userData.lastName = lastName;
         userData.dob = dob;
         userData.licenseNumber = licenseNumber;
+        userData.state = state;
         userData.email = email;
         userData.phone = phone;
         userData.registerDate = new Date().toISOString();
@@ -502,7 +576,7 @@
       const score = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
       
       const emailBody = `ELDT Class A CDL Theory
-Student: ${userData.firstName} ${userData.lastName} (DOB: ${userData.dob} License Id: ${userData.licenseNumber})
+Student: ${userData.firstName} ${userData.lastName} (DOB: ${userData.dob} License: ${userData.state} ${userData.licenseNumber})
 Email: ${userData.email} Phone: ${userData.phone}
 Registered: ${new Date(userData.registerDate).toLocaleString()} 
 Started: ${userData.startDate ? new Date(userData.startDate).toLocaleString() : 'Not started'}
@@ -603,7 +677,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
                   </div>
                   <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
                     <span style="color: #7f8c8d; font-weight: 500;">License ID:</span>
-                    <span style="color: #2c3e50; font-weight: 600;">${userData.licenseNumber}</span>
+                    <span style="color: #2c3e50; font-weight: 600;">${userData.state} ${userData.licenseNumber}</span>
                   </div>
                   <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
                     <span style="color: #7f8c8d; font-weight: 500;">Email:</span>
@@ -679,7 +753,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
 
 ELDT Class A CDL Theory
 
-Student: ${userData.firstName} ${userData.lastName} (DOB: ${userData.dob} License Id: ${userData.licenseNumber})
+Student: ${userData.firstName} ${userData.lastName} (DOB: ${userData.dob} License: ${userData.state} ${userData.licenseNumber})
 Email: ${userData.email}
 Phone: ${userData.phone}
 Registered: ${new Date(userData.registerDate).toLocaleString()}
@@ -691,10 +765,10 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
         `;
 
         // Send email via Mailgun
-        // sendEmailViaMailgun(emailBodyHtml, emailBodyText);
+        sendEmailViaMailgun(emailBodyHtml, emailBodyText);
         
         // Save results to file
-        saveResults(emailBodyHtml, userData.licenseNumber, userData.firstName, userData.lastName);
+        saveResults(emailBodyHtml, userData.licenseNumber, userData.state, userData.firstName, userData.lastName);
         
         // Show confirmation to user
         showEmailConfirmation(emailBodyHtml);
@@ -731,7 +805,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
     }
 
     // Save results to file function (uses server-side API)
-    async function saveResults(htmlContent, licenseNumber, firstName, lastName) {
+    async function saveResults(htmlContent, licenseNumber, state, firstName, lastName) {
       try {
         const response = await fetch('/api/saveResults', {
           method: 'POST',
@@ -741,8 +815,9 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
           body: JSON.stringify({
             htmlContent: htmlContent,
             licenseNumber: licenseNumber,
+            state: state,
             firstName: firstName,
-            lastName: lastName
+            lastName: lastName,
           })
         });
 
@@ -2080,6 +2155,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
         userData.lastName = 'Test';
         userData.dob = '1990-01-01';
         userData.licenseNumber = '123456789';
+        userData.state = 'US-NY';
         userData.email = 'demo@example.com';
         userData.phone = '123-555-0123';
         userData.registerDate = new Date().toISOString();
