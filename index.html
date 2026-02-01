@@ -11,6 +11,161 @@
       --shadow: 0 10px 30px rgba(0,0,0,0.35);
     }
     * { box-sizing: border-box; }
+    .quiz-progress.passed {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    
+    .quiz-progress.failed {
+      color: #f44336;
+      font-weight: bold;
+    }
+    
+    .quiz-progress.in-progress {
+      color: #FF9800;
+      font-weight: bold;
+    }
+    
+    .quiz-progress.not-started {
+      color: #999;
+    }
+    
+    .progress-summary {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .overall-progress h3 {
+      color: var(--primary);
+      margin: 0 0 15px 0;
+    }
+    
+    .progress-stats {
+      display: grid;
+      gap: 10px;
+    }
+    
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .stat:last-child {
+      border-bottom: none;
+    }
+    
+    .stat-label {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .stat-value {
+      font-weight: bold;
+    }
+    
+    .stat-value.passed {
+      color: #4CAF50;
+    }
+    
+    .stat-value.not-passed {
+      color: #666;
+    }
+    
+    header h1.progress-passed {
+      color: #4CAF50;
+    }
+    
+    header h1.progress-in-progress {
+      color: #FF9800;
+    }
+    
+    header h1.progress-not-started {
+      color: var(--text);
+    }
+    
+    /* Progress Indicator Styles */
+    .quiz-progress.passed {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    
+    .quiz-progress.failed {
+      color: #f44336;
+      font-weight: bold;
+    }
+    
+    .quiz-progress.in-progress {
+      color: #FF9800;
+      font-weight: bold;
+    }
+    
+    .quiz-progress.not-started {
+      color: #999;
+    }
+    
+    .progress-summary {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .overall-progress h3 {
+      color: var(--primary);
+      margin: 0 0 15px 0;
+    }
+    
+    .progress-stats {
+      display: grid;
+      gap: 10px;
+    }
+    
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .stat:last-child {
+      border-bottom: none;
+    }
+    
+    .stat-label {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .stat-value {
+      font-weight: bold;
+    }
+    
+    .stat-value.passed {
+      color: #4CAF50;
+    }
+    
+    .stat-value.not-passed {
+      color: #666;
+    }
+    
+    header h1.progress-passed {
+      color: #4CAF50;
+    }
+    
+    header h1.progress-in-progress {
+      color: #FF9800;
+    }
+    
+    header h1.progress-not-started {
+      color: var(--text);
+    }
+    
     body {
       margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
       background: radial-gradient(1200px 600px at 20% 0%, #0b1024 0%, var(--bg) 50%, #0a0f20 100%);
@@ -27,6 +182,53 @@
       display: none; position: fixed; top: 20px; left: 20px; z-index: 1000;
       background: var(--primary); color: white; border: none; padding: 12px 16px;
       border-radius: 8px; cursor: pointer; font-size: 18px; box-shadow: var(--shadow);
+    }
+
+    .global-action-bar {
+      width: 100%;
+      display: none;
+      gap: 12px;
+      padding: 16px 20px;
+      margin-top: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+    }
+    .global-action-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      transition: all 0.3s ease;
+    }
+
+    .global-action-btn:hover:not([disabled]) {
+      background: rgba(255,255,255,0.3);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .global-action-btn.accent {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 8px 20px rgba(59,130,246,0.35);
+    }
+
+    .global-action-btn.accent:hover:not([disabled]) {
+      filter: brightness(1.05);
+    }
+
+    .global-action-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     
     aside {
@@ -56,35 +258,397 @@
 
     main { flex: 1; margin-left: 320px; padding: 40px; display: flex; justify-content: center; }
     .container { max-width: 850px; width: 100%; }
-    .quiz-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
-    .quiz-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
-    .progress-bar { width: 200px; height: 10px; background: #0b1221; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+    .home-dashboard { display: flex; flex-direction: column; gap: 24px; padding-top: 20px; }
+    .home-welcome h1 { margin: 0 0 8px 0; font-size: 2rem; }
+    .home-welcome p { margin: 0; color: var(--muted); }
+    .info-section { background: rgba(15,23,42,0.8); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+    .info-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .info-header h3 { margin: 0; }
+    .info-header p { margin: 6px 0 0; color: var(--muted); }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .info-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); }
+    .info-label { display: block; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .info-value { display: block; font-size: 1.05rem; font-weight: 600; color: var(--text); }
+    .info-hint { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+    .payment-card { background: rgba(15,23,42,0.8); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); }
+    .payment-card-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 18px; padding-bottom: 12px; }
+    .payment-card-header h3 { margin: 0 0 6px 0; }
+    .payment-card-header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+    .payment-status { align-self: center; background: rgba(255,255,255,0.08); border-radius: 999px; padding: 6px 16px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .payment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .payment-field { background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 14px; }
+    .payment-label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 4px; }
+    .payment-value { font-size: 1rem; font-weight: 600; color: var(--text); }
+    .payment-note { margin-top: 18px; font-size: 0.9rem; color: var(--muted); }
+    .quiz-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow: hidden; }
+    .quiz-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .progress-bar { width: 170px; height: 7px; background: #0b1221; border-radius: 7px; overflow: hidden; border: 1px solid var(--border); }
     .progress-fill { height: 100%; width: 0%; background: var(--primary); transition: width 0.3s; }
 
-    .option { display: flex; gap: 12px; padding: 15px; border: 1px solid var(--border); background: #0b1221; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
+    .quiz-card h3 { font-size: 1.05rem; margin: 0 0 14px; }
+    .option { display: flex; gap: 8px; padding: 10px; border: 1px solid var(--border); background: #0b1221; border-radius: 9px; cursor: pointer; margin-bottom: 8px; font-size: 0.9rem; }
     .feedback { font-weight: 700; margin-top: 15px; padding: 10px; border-radius: 8px; }
     .feedback.correct { color: var(--accent); background: rgba(34, 197, 94, 0.1); }
     .feedback.incorrect { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
 
     .btn { padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; border: none; }
     .btn-primary { background: var(--primary); color: white; }
+
+    /* Content display styles */
+    .content-header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 20px;
+      border-radius: 12px 12px 0 0;
+      margin: -25px -25px 25px -25px;
+    }
+    
+    .back-button {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .back-button:hover {
+      background: rgba(255,255,255,0.3);
+      border-color: rgba(255,255,255,0.5);
+    }
+    
+    .content-body {
+      line-height: 1.6;
+      font-size: 16px;
+      max-width: none;
+    }
+    
+    .content-body h2 {
+      color: var(--primary);
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 10px;
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+    
+    .content-body h3 {
+      color: var(--secondary);
+      margin-top: 25px;
+      margin-bottom: 15px;
+    }
+    
+    .content-body p {
+      margin-bottom: 15px;
+      text-align: justify;
+    }
+    
+    .content-body ul, .content-body ol {
+      margin-bottom: 15px;
+      padding-left: 25px;
+    }
+    
+    .content-body li {
+      margin-bottom: 8px;
+    }
+    
+    .highlight-box, .success-box, .warning-box, .danger-box {
+      padding: 18px;
+      margin: 20px 0;
+      border-radius: 8px;
+      border-left: 4px solid;
+    }
+    
+    .highlight-box {
+      background: rgba(59, 130, 246, 0.1);
+      border-left-color: var(--primary);
+    }
+    
+    .success-box {
+      background: rgba(34, 197, 94, 0.1);
+      border-left-color: #22c55e;
+    }
+    
+    .warning-box {
+      background: rgba(245, 158, 11, 0.1);
+      border-left-color: #f59e0b;
+    }
+    
+    .danger-box {
+      background: rgba(239, 68, 68, 0.15);
+      border-left-color: #ef4444;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+    
+    .error-message {
+      text-align: center;
+      padding: 40px;
+      color: #ef4444;
+    }
+    
+    .retry-button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    
+    .retry-button:hover {
+      background: var(--secondary);
+    }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .btn-warning {
+      background: #f39c12;
+      color: white;
+      border: 2px solid #f39c12;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    .btn-warning:hover {
+      background: #e67e22;
+      border-color: #e67e22;
+    }
+
+    /* Retake Quiz Modal Styles */
+    .retake-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+    }
+    .retake-modal-overlay.active {
+      display: flex;
+    }
+    .retake-modal-box {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 450px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .retake-modal-box h3 {
+      color: #f39c12;
+      margin-bottom: 20px;
+      font-size: 1.4rem;
+    }
+    .retake-modal-box p {
+      color: var(--text);
+      margin-bottom: 25px;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+    .retake-modal-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    .retake-modal-buttons button {
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .retake-btn-confirm {
+      background: #e74c3c;
+      color: white;
+    }
+    .retake-btn-confirm:hover {
+      background: #c0392b;
+    }
+    .retake-btn-cancel {
+      background: #7f8c8d;
+      color: white;
+    }
+    .retake-btn-cancel:hover {
+      background: #606c6d;
+    }
 
     .content-section { padding: 30px; max-height: 70vh; overflow-y: auto; }
     
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text); }
-    .form-group input { width: 100%; padding: 12px; background: #0b1221; border: 1px solid var(--border); 
-      border-radius: 8px; color: var(--text); font-size: 1rem; }
-    .form-group input:focus { outline: none; border-color: var(--primary); }
+    .form-group { 
+      margin-bottom: 16px; 
+    }
+    
+    .form-group label { 
+      display: block; margin-bottom: 6px; font-weight: 600; 
+      color: var(--text); font-size: 0.9rem; 
+    }
+    
+    .form-group input { 
+      width: 100%; padding: 12px 14px; background: rgba(15, 23, 42, 0.8); 
+      border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 10px; 
+      color: var(--text); font-size: 1rem; transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+    
+    .form-group input:focus { 
+      outline: none; border-color: var(--primary); 
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      background: rgba(15, 23, 42, 0.9);
+    }
+    
+    .form-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    }
+    
+    .form-row-thirds {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;
+    }
+    
+    @media (max-width: 640px) {
+      .form-row, .form-row-thirds {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .auth-modal-content {
+        padding: 24px;
+      }
+    }
     .form-group datalist { background: var(--card); }
     .error-msg { color: var(--danger); font-size: 0.875rem; margin-top: 5px; display: none; }
     
-    .submit-scores-btn { position: fixed; bottom: 20px; right: 20px; z-index: 150; 
-      background: var(--accent); color: white; padding: 15px 30px; border-radius: 10px; 
-      border: none; font-weight: 600; cursor: pointer; box-shadow: var(--shadow); 
-      font-size: 1rem; display: none; }
-    .submit-scores-btn:hover { background: #16a34a; }
+    /* Authentication Modal Styles */
+    .auth-modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85); z-index: 10000; display: flex;
+      align-items: center; justify-content: center; backdrop-filter: blur(8px);
+      animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .auth-modal-content {
+      background: linear-gradient(135deg, var(--card) 0%, #0f1729 100%);
+      border-radius: 20px; padding: 32px; max-width: 600px; width: 95%;
+      max-height: 95vh; overflow-y: auto; border: 1px solid rgba(59, 130, 246, 0.2);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.1);
+      animation: slideUp 0.4s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .auth-tabs {
+      display: flex; margin-bottom: 24px; background: rgba(15, 23, 42, 0.6);
+      border-radius: 12px; padding: 4px; border: 1px solid rgba(59, 130, 246, 0.1);
+    }
+    
+    .auth-tab {
+      flex: 1; padding: 12px 20px; background: transparent; border: none;
+      color: var(--muted); cursor: pointer; font-size: 1rem; font-weight: 600;
+      border-radius: 8px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    
+    .auth-tab.active {
+      color: white; background: linear-gradient(135deg, var(--primary), #1e40af);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    .auth-tab:hover:not(.active) {
+      color: var(--text); background: rgba(59, 130, 246, 0.1);
+    }
+    
+    .auth-form h2 {
+      margin: 0 0 24px 0; color: var(--text); text-align: center;
+      font-size: 1.75rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), #06b6d4);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .auth-submit {
+      width: 100%; margin-top: 24px; font-size: 1.1rem; padding: 14px;
+      background: linear-gradient(135deg, var(--primary), #1e40af);
+      border: none; border-radius: 12px; font-weight: 600;
+      transition: all 0.3s; position: relative; overflow: hidden;
+    }
+    
+    .auth-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    }
+    
+    .auth-submit:active {
+      transform: translateY(0);
+    }
+    
+    .auth-message {
+      margin-top: 15px; padding: 10px; border-radius: 8px; text-align: center;
+      font-weight: 500; display: none;
+    }
+    
+    .auth-message.success {
+      background: rgba(34, 197, 94, 0.1); color: var(--accent); display: block;
+    }
+    
+    .auth-message.error {
+      background: rgba(239, 68, 68, 0.1); color: var(--danger); display: block;
+    }
+    
+    .password-requirements {
+      font-size: 0.75rem; color: rgba(156, 163, 175, 0.8); margin-top: 4px;
+      line-height: 1.3; padding: 6px 8px; background: rgba(15, 23, 42, 0.4);
+      border-radius: 6px; border-left: 2px solid var(--primary);
+    }
+    
+    .password-input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-input-container input {
+      padding-right: 40px;
+      flex: 1;
+    }
+
+    .password-toggle {
+      position: absolute; right: 12px; cursor: pointer; user-select: none;
+      font-size: 1.1rem; color: rgba(156, 163, 175, 0.7); z-index: 1;
+      padding: 4px; border-radius: 4px; transition: all 0.2s;
+    }
+
+    .password-toggle:hover {
+      color: var(--primary); background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    .password-toggle.active {
+      color: var(--primary);
+    }
     
     @media (max-width: 768px) {
       .menu-toggle { display: block; }
@@ -95,14 +659,194 @@
       .quiz-header { flex-direction: column; align-items: flex-start; }
       .progress-bar { width: 100%; }
       .content-section { padding: 20px; max-height: 60vh; }
-      .submit-scores-btn { bottom: 10px; right: 10px; padding: 12px 20px; font-size: 0.9rem; }
     }
   </style>
 </head>
 <body>
 
+  <!-- Retake Quiz Confirmation Modal -->
+  <div id="retakeModal" class="retake-modal-overlay">
+    <div class="retake-modal-box">
+      <h3>⚠️ Reset Quiz Progress</h3>
+      <p>Please note - You will lose your progress for this section.</p>
+      <p style="font-weight: bold;">Press Confirm to Continue or Cancel otherwise.</p>
+      <div class="retake-modal-buttons">
+        <button class="retake-btn-confirm" onclick="confirmRetakeQuiz()">Confirm</button>
+        <button class="retake-btn-cancel" onclick="cancelRetakeQuiz()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentication Modal -->
+  <div id="authModal" class="auth-modal">
+    <div class="auth-modal-content">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="showLogin()">Login</button>
+        <button class="auth-tab" onclick="showSignup()">Sign Up</button>
+      </div>
+      
+      <!-- Login Form -->
+      <div id="loginForm" class="auth-form">
+        <h2>Welcome Back</h2>
+        <div class="form-group">
+          <label for="loginEmail">Email *</label>
+          <input type="email" id="loginEmail" required autocomplete="email">
+          <div class="error-msg" id="loginEmailError"></div>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password *</label>
+          <div class="password-input-container">
+            <input type="password" id="loginPassword" required>
+            <span class="password-toggle" id="loginPasswordToggle" onclick="togglePasswordVisibility('loginPassword', 'loginPasswordToggle')">&#128065;</span>
+          </div>
+          <div class="error-msg" id="loginPasswordError"></div>
+        </div>
+        <button class="btn btn-primary auth-submit" onclick="handleLogin()">Sign In</button>
+        <div class="auth-message" id="loginMessage"></div>
+      </div>
+      
+      <!-- Signup Form -->
+      <div id="signupForm" class="auth-form" style="display: none;">
+        <h2>Create Your Account</h2>
+        
+        <!-- Name Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="signupFirstName">First Name *</label>
+            <input type="text" id="signupFirstName" required>
+            <div class="error-msg" id="signupFirstNameError"></div>
+          </div>
+          <div class="form-group">
+            <label for="signupLastName">Last Name *</label>
+            <input type="text" id="signupLastName" required>
+            <div class="error-msg" id="signupLastNameError"></div>
+          </div>
+        </div>
+
+        <!-- DOB and License Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="signupDob">Date of Birth *</label>
+            <input type="date" id="signupDob" required>
+            <div class="error-msg" id="signupDobError"></div>
+          </div>
+          <div class="form-group">
+            <label for="signupLicenseNumber">License Number *</label>
+            <input type="text" id="signupLicenseNumber" required>
+            <div class="error-msg" id="signupLicenseNumberError"></div>
+          </div>
+        </div>
+
+        <!-- State and Email Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="signupState">State *</label>
+            <input type="text" id="signupState" list="signupStates" required autocomplete="address-level1">
+            <datalist id="signupStates">
+            <option value="US-AL">Alabama</option>
+            <option value="US-AK">Alaska</option>
+            <option value="US-AZ">Arizona</option>
+            <option value="US-AR">Arkansas</option>
+            <option value="US-CA">California</option>
+            <option value="US-CO">Colorado</option>
+            <option value="US-CT">Connecticut</option>
+            <option value="US-DE">Delaware</option>
+            <option value="US-FL">Florida</option>
+            <option value="US-GA">Georgia</option>
+            <option value="US-HI">Hawaii</option>
+            <option value="US-ID">Idaho</option>
+            <option value="US-IL">Illinois</option>
+            <option value="US-IN">Indiana</option>
+            <option value="US-IA">Iowa</option>
+            <option value="US-KS">Kansas</option>
+            <option value="US-KY">Kentucky</option>
+            <option value="US-LA">Louisiana</option>
+            <option value="US-ME">Maine</option>
+            <option value="US-MD">Maryland</option>
+            <option value="US-MA">Massachusetts</option>
+            <option value="US-MI">Michigan</option>
+            <option value="US-MN">Minnesota</option>
+            <option value="US-MS">Mississippi</option>
+            <option value="US-MO">Missouri</option>
+            <option value="US-MT">Montana</option>
+            <option value="US-NE">Nebraska</option>
+            <option value="US-NV">Nevada</option>
+            <option value="US-NH">New Hampshire</option>
+            <option value="US-NJ">New Jersey</option>
+            <option value="US-NM">New Mexico</option>
+            <option value="US-NY">New York</option>
+            <option value="US-NC">North Carolina</option>
+            <option value="US-ND">North Dakota</option>
+            <option value="US-OH">Ohio</option>
+            <option value="US-OK">Oklahoma</option>
+            <option value="US-OR">Oregon</option>
+            <option value="US-PA">Pennsylvania</option>
+            <option value="US-RI">Rhode Island</option>
+            <option value="US-SC">South Carolina</option>
+            <option value="US-SD">South Dakota</option>
+            <option value="US-TN">Tennessee</option>
+            <option value="US-TX">Texas</option>
+            <option value="US-UT">Utah</option>
+            <option value="US-VT">Vermont</option>
+            <option value="US-VA">Virginia</option>
+            <option value="US-WA">Washington</option>
+            <option value="US-WV">West Virginia</option>
+            <option value="US-WI">Wisconsin</option>
+            <option value="US-WY">Wyoming</option>
+            <option value="US-DC">District of Columbia</option>
+            <option value="US-PR">Puerto Rico</option>
+            <option value="US-VI">Virgin Islands</option>
+            <option value="US-AS">American Samoa</option>
+            <option value="US-GU">Guam</option>
+            <option value="US-MP">Northern Mariana Islands</option>
+          </datalist>
+          <div class="error-msg" id="signupStateError"></div>
+        </div>
+        <div class="form-group">
+          <label for="signupEmail">Email *</label>
+          <input type="email" id="signupEmail" required>
+          <div class="error-msg" id="signupEmailError"></div>
+        </div>
+      </div>
+
+      <!-- Phone (Full Width) -->
+      <div class="form-group">
+        <label for="signupPhone">Phone</label>
+        <input type="tel" id="signupPhone">
+        <div class="error-msg" id="signupPhoneError"></div>
+      </div>
+
+      <!-- Password Row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="signupPassword">Create Password *</label>
+          <div class="password-input-container">
+            <input type="password" id="signupPassword" required>
+            <span class="password-toggle" id="signupPasswordToggle" onclick="togglePasswordVisibility('signupPassword', 'signupPasswordToggle')">&#128065;</span>
+          </div>
+          <div class="error-msg" id="signupPasswordError"></div>
+        </div>
+        <div class="form-group">
+          <label for="signupConfirmPassword">Confirm Password *</label>
+          <div class="password-input-container">
+            <input type="password" id="signupConfirmPassword" required>
+            <span class="password-toggle" id="signupConfirmPasswordToggle" onclick="togglePasswordVisibility('signupConfirmPassword', 'signupConfirmPasswordToggle')">&#128065;</span>
+          </div>
+          <div class="error-msg" id="signupConfirmPasswordError"></div>
+        </div>
+      </div>
+
+      <!-- Password Requirements (Full Width) -->
+      <div class="password-requirements">
+        Password must be at least 8 characters with uppercase, lowercase, number, and special character
+      </div>
+        <button class="btn btn-primary auth-submit" onclick="handleSignup()">Create Account</button>
+        <div class="auth-message" id="signupMessage"></div>
+      </div>
+    </div>
+  </div>
+
   <button class="menu-toggle" onclick="toggleMobileMenu()" style="display:none">☰ Menu</button>
-  <button id="submitScoresBtn" class="submit-scores-btn" onclick="submitScores()">Submit Scores</button>
 
   <aside id="sidebar" style="display:none">
     <div class="sidebar-header" onclick="showHome()"><h3>ELDT CLASS A CDL THEORY</h3></div>
@@ -321,7 +1065,9 @@
 
     let currentQuizId = null;
     let currentQIndex = 0;
+    let isAuthenticated = false; // Track authentication state
     let userData = {
+      id: null,
       firstName: '',
       lastName: '',
       dob: '',
@@ -331,8 +1077,453 @@
       phone: '',
       registerDate: '',
       startDate: '',
-      submissionDate: ''
+      lastQuizDate: '',
+      submissionDate: '',
+      userType: 'Student'
     };
+
+    // Authentication Functions
+    function showLogin() {
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('signupForm').style.display = 'none';
+      document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+      clearAuthMessages();
+    }
+
+    function showSignup() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('signupForm').style.display = 'block';
+      document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+      clearAuthMessages();
+    }
+
+    function togglePasswordVisibility(inputId, iconId) {
+      const passwordInput = document.getElementById(inputId);
+      const eyeIcon = document.getElementById(iconId);
+      
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.innerHTML = '&#128065;'; // Keep same eye icon
+        eyeIcon.classList.add('active');
+        eyeIcon.style.opacity = '0.5'; // Dim it to show it's active
+      } else {
+        passwordInput.type = 'password';
+        eyeIcon.innerHTML = '&#128065;'; // Same eye icon
+        eyeIcon.classList.remove('active');
+        eyeIcon.style.opacity = '1'; // Full opacity for inactive
+      }
+    }
+
+    function clearAuthMessages() {
+      document.querySelectorAll('.auth-message').forEach(msg => {
+        msg.style.display = 'none';
+        msg.className = 'auth-message';
+      });
+      document.querySelectorAll('.error-msg').forEach(error => {
+        error.style.display = 'none';
+        error.textContent = '';
+      });
+    }
+
+    function showAuthMessage(elementId, message, isError = false) {
+      const msgEl = document.getElementById(elementId);
+      msgEl.textContent = message;
+      msgEl.className = isError ? 'auth-message error' : 'auth-message success';
+      msgEl.style.display = 'block';
+    }
+
+    function validateAuthPassword(password) {
+      const minLength = 8;
+      const hasUpperCase = /[A-Z]/.test(password);
+      const hasLowerCase = /[a-z]/.test(password);
+      const hasNumbers = /\d/.test(password);
+      const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(password);
+      
+      console.log('Password validation for:', password);
+      console.log('Length >= 8:', password.length >= minLength);
+      console.log('Has uppercase:', hasUpperCase);
+      console.log('Has lowercase:', hasLowerCase);
+      console.log('Has numbers:', hasNumbers);
+      console.log('Has special char:', hasSpecialChar);
+      
+      return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
+    }
+
+    async function handleLogin() {
+      clearAuthMessages();
+      
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      
+      // Basic validation
+      if (!email) {
+        showError('loginEmailError', 'Email is required');
+        return;
+      }
+      if (!password) {
+        showError('loginPasswordError', 'Password is required');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // Include cookies for authentication
+          body: JSON.stringify({ email, password })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          isAuthenticated = true; // Set authentication state
+          
+          // Store token for VS Code browser fallback
+          if (result.token) {
+            localStorage.setItem('authToken', result.token);
+          }
+          
+          updateActionBarVisibility();
+          
+          userData = {
+            id: result.user.id,
+            firstName: result.user.firstName,
+            lastName: result.user.lastName,
+            email: result.user.email,
+            userType: result.user.userType,
+            registerDate: result.user.registerDate // Use date from server
+          };
+          
+          showAuthMessage('loginMessage', 'Login successful! Loading your courses...', false);
+          
+          setTimeout(() => {
+            hideAuthModal();
+            showUserDashboard();
+          }, 1500);
+          
+        } else {
+          showAuthMessage('loginMessage', result.error || 'Login failed', true);
+        }
+      } catch (error) {
+        console.error('Login error:', error);
+        showAuthMessage('loginMessage', 'Connection error. Please try again.', true);
+      }
+    }
+
+    async function handleSignup() {
+      clearAuthMessages();
+      
+      const formData = {
+        firstName: document.getElementById('signupFirstName').value.trim(),
+        lastName: document.getElementById('signupLastName').value.trim(),
+        dob: document.getElementById('signupDob').value,
+        licenseNumber: document.getElementById('signupLicenseNumber').value.trim(),
+        state: document.getElementById('signupState').value.trim(),
+        email: document.getElementById('signupEmail').value.trim(),
+        phone: document.getElementById('signupPhone').value.trim(),
+        password: document.getElementById('signupPassword').value,
+        confirmPassword: document.getElementById('signupConfirmPassword').value
+      };
+
+      // Validation
+      let hasErrors = false;
+      
+      if (!formData.firstName) {
+        showError('signupFirstNameError', 'First name is required');
+        hasErrors = true;
+      }
+      if (!formData.lastName) {
+        showError('signupLastNameError', 'Last name is required');
+        hasErrors = true;
+      }
+      if (!formData.dob) {
+        showError('signupDobError', 'Date of birth is required');
+        hasErrors = true;
+      }
+      if (!formData.state) {
+        showError('signupStateError', 'State is required');
+        hasErrors = true;
+      }
+      if (!formData.email) {
+        showError('signupEmailError', 'Email is required');
+        hasErrors = true;
+      }
+      if (!formData.licenseNumber) {
+        showError('signupLicenseNumberError', 'License number is required');
+        hasErrors = true;
+      }
+      if (!formData.password) {
+        showError('signupPasswordError', 'Password is required');
+        hasErrors = true;
+      } else if (!validateAuthPassword(formData.password)) {
+        showError('signupPasswordError', 'Password must be at least 8 characters with uppercase, lowercase, number, and special character');
+        hasErrors = true;
+      }
+      if (!formData.confirmPassword) {
+        showError('signupConfirmPasswordError', 'Please confirm your password');
+        hasErrors = true;
+      } else if (formData.password !== formData.confirmPassword) {
+        showError('signupConfirmPasswordError', 'Passwords do not match');
+        hasErrors = true;
+      }
+
+      if (hasErrors) return;
+
+      try {
+        const response = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          showAuthMessage('signupMessage', 'Account created successfully! Please login with your new credentials.', false);
+          
+          setTimeout(() => {
+            showLogin();
+            document.getElementById('loginEmail').value = formData.email;
+          }, 2000);
+          
+        } else {
+          showAuthMessage('signupMessage', result.error || 'Registration failed', true);
+        }
+      } catch (error) {
+        console.error('Signup error:', error);
+        showAuthMessage('signupMessage', 'Connection error. Please try again.', true);
+      }
+    }
+
+    function hideAuthModal() {
+      document.getElementById('authModal').style.display = 'none';
+    }
+
+    async function checkAuthStatus() {
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include' // Include cookies for authentication
+        };
+        
+        // Add fallback header for VS Code browser
+        if (authToken) {
+          requestOptions.headers = {
+            'X-Auth-Token': authToken
+          };
+        }
+        
+        const response = await fetch('/api/auth/status', requestOptions);
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.authenticated) {
+            isAuthenticated = true; // Set authentication state
+            userData = {
+              id: result.user.userId,
+              firstName: result.user.firstName,
+              lastName: result.user.lastName,
+              email: result.user.email,
+              userType: result.user.userType,
+              registerDate: result.user.registerDate // Use date from server
+            };
+            updateActionBarVisibility();
+            hideAuthModal();
+            showUserDashboard();
+            return true;
+          }
+        }
+      } catch (error) {
+        console.log('Not authenticated:', error);
+      }
+      
+      // Show auth modal if not authenticated
+      document.getElementById('authModal').style.display = 'flex';
+      return false;
+    }
+
+    // Initialize authentication on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuthStatus();
+    });
+
+    // User Dashboard Function
+    function showUserDashboard() {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) {
+        sidebar.style.display = 'none';
+      }
+      const menuToggle = document.querySelector('.menu-toggle');
+      if (menuToggle) {
+        menuToggle.style.display = 'none';
+      }
+      activeCourseId = null;
+      const contentArea = document.getElementById('contentArea');
+      contentArea.innerHTML = `
+        <div class="quiz-card">
+          <div class="quiz-header">
+            <h2>Welcome, ${userData.firstName} ${userData.lastName}!</h2>
+            <button class="btn btn-outline" onclick="logout()" style="margin-left: auto;">Logout</button>
+          </div>
+          <div class="content-section">
+            <h3>Your Assigned Courses</h3>
+            <div id="assignedCourses">
+              <div class="loading">Loading your courses...</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      loadUserCourses();
+    }
+
+    async function loadUserCourses() {
+      try {
+        console.log('🔄 Loading user courses...');
+        console.log('🔒 Auth state:', isAuthenticated);
+        console.log('👤 User data:', userData);
+        
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include', // Include cookies for authentication
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        };
+        
+        // Add fallback header for VS Code browser
+        if (authToken) {
+          requestOptions.headers['X-Auth-Token'] = authToken;
+        }
+
+        const response = await fetch('/api/user/courses', requestOptions);
+        console.log('📡 API Response status:', response.status);
+        console.log('📡 API Response headers:', Object.fromEntries(response.headers));
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ API Error:', response.status, errorText);
+          throw new Error(`Failed to load courses: ${response.status} ${errorText}`);
+        }
+
+        const courses = await response.json();
+        console.log('📚 Loaded courses:', courses);
+        
+        const coursesContainer = document.getElementById('assignedCourses');
+
+        if (courses.length === 0) {
+          console.log('📋 No courses found for user');
+          coursesContainer.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--muted);">
+              <h4>No Courses Assigned</h4>
+              <p>Please contact your administrator to get assigned to courses.</p>
+            </div>
+          `;
+        } else {
+          console.log('✅ Rendering', courses.length, 'courses');
+          console.log('📊 Course data:', courses);
+          coursesContainer.innerHTML = courses.map(course => {
+            const percentage = course.completion_percentage || 0;
+            console.log(`Course ${course.name}: ${percentage}% (${course.correct_answers}/${course.total_questions})`);
+            return `
+            <div class="course-card" style="margin-bottom: 20px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--border); cursor: pointer;" onclick="startCourse(${course.id}, '${course.name}')">
+              <h4 style="margin: 0 0 10px 0; color: var(--text);">${course.name} - <span style="color: ${percentage >= 80 ? 'var(--accent)' : 'var(--primary)'};">${percentage}% completed</span></h4>
+              <p style="margin: 0; color: var(--muted);">${course.description || 'Click to start this course'}</p>
+            </div>
+          `;
+          }).join('');
+        }
+      } catch (error) {
+        console.error('💥 Error loading courses:', error);
+        console.error('💥 Error details:', error.message, error.stack);
+        document.getElementById('assignedCourses').innerHTML = `
+          <div style="text-align: center; padding: 40px; color: var(--danger);">
+            <h4>Error Loading Courses</h4>
+            <p>Please try refreshing the page or contact support.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function startCourse(courseId, courseName) {
+      try {
+        console.log('🚀 Starting course:', courseId, courseName);
+        activeCourseId = courseId;
+        console.log('🔍 User authenticated:', isAuthenticated);
+        console.log('👤 User data:', userData);
+        
+        recordStartDate();
+        console.log('✅ Recorded start date');
+        
+        // Show the sidebar and course content
+        document.getElementById('sidebar').style.display = 'flex';
+        console.log('✅ Showed sidebar');
+        
+        if (window.innerWidth <= 768) {
+          document.querySelector('.menu-toggle').style.display = 'block';
+        }
+        console.log('✅ Ready to show submit button based on score');
+        
+        // Initialize the course
+        console.log('🔄 Initializing sidebar...');
+        initSidebar();
+        console.log('✅ Initialized sidebar');
+        
+        console.log('🔄 Showing home...');
+        showHome();
+        console.log('✅ Showed home');
+        
+        console.log('🎉 Course started successfully');
+        
+      } catch (error) {
+        console.error('💥 Error starting course:', error);
+        console.error('💥 Error details:', error.message, error.stack);
+        alert('Error starting course. Please try again.');
+      }
+    }
+
+    async function logout() {
+      try {
+        const response = await fetch('/api/logout', { 
+          method: 'POST',
+          credentials: 'include' // Include cookies for authentication
+        });
+        
+        if (response.ok) {
+          isAuthenticated = false; // Reset authentication state
+          localStorage.removeItem('authToken'); // Clear stored token
+          userData = {
+            id: null,
+            firstName: '',
+            lastName: '',
+            dob: '',
+            licenseNumber: '',
+            state: '',
+            email: '',
+            phone: '',
+            registerDate: '',
+            startDate: '',
+            lastQuizDate: '',
+            submissionDate: '',
+            userType: 'Student'
+          };
+          
+          // Hide course content
+          document.getElementById('sidebar').style.display = 'none';
+          const submitScoresBtn = document.getElementById('submitScoresBtn');
+          if (submitScoresBtn) {
+            submitScoresBtn.style.display = 'none';
+          }
+          
+          // Show auth modal
+          document.getElementById('authModal').style.display = 'flex';
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+    }
 
     function showRegistrationForm() {
       document.getElementById('contentArea').innerHTML = `
@@ -546,7 +1737,6 @@
         if (window.innerWidth <= 768) {
           document.querySelector('.menu-toggle').style.display = 'block';
         }
-        document.getElementById('submitScoresBtn').style.display = 'block';
         initSidebar();
       }
     }
@@ -951,6 +2141,13 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
     }
 
     function initSidebar() {
+      // If user is authenticated, load from database instead of hardcoded data
+      if (isAuthenticated) {
+        loadCourseFromDatabase();
+        return;
+      }
+      
+      // Fallback to hardcoded sections for non-authenticated users
       const nav = document.getElementById('sidebarNav');
       nav.innerHTML = '';
       Object.entries(quizRegistry).forEach(([id, data]) => {
@@ -958,7 +2155,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
           <div class="nav-item" onclick="toggleMenu('m${id}')">${data.title}</div>
           <div id="m${id}" class="sub-menu">
             <div class="sub-item" onclick="showContent(${id}); closeMobileMenu();">Study Content</div>
-            <div id="quizLabel${id}" class="sub-item" onclick="loadQuiz(${id}); closeMobileMenu();">Quiz (0 / ${data.questions.length} Correct)</div>
+            <div id="quizLabel${id}" class="sub-item" onclick="loadQuizFromDatabase(${id}); closeMobileMenu();">Quiz (0 / ${data.questions.length} Correct)</div>
           </div>`;
       });
       showHome();
@@ -970,36 +2167,243 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
       if(menu) menu.classList.toggle('active');
     }
 
-    function showHome() {
+    function updateActionBarVisibility() {
+      const actionBar = document.getElementById('globalActionBar');
+      if (!actionBar) return;
+      actionBar.style.display = isAuthenticated ? 'flex' : 'none';
+    }
+
+    async function fetchUserDashboardInfo() {
+      if (!isAuthenticated) {
+        return null;
+      }
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include'
+        };
+        if (authToken) {
+          requestOptions.headers = {
+            'X-Auth-Token': authToken
+          };
+        }
+        const response = await fetch('/api/user/dashboard-info', requestOptions);
+        if (!response.ok) {
+          throw new Error(`Failed to load dashboard info (${response.status})`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error('💥 Error fetching dashboard info:', error);
+        return null;
+      }
+    }
+
+    async function showHome() {
       currentQuizId = null;
       closeMobileMenu();
+      
+      const dashboardInfo = await fetchUserDashboardInfo();
+      if (dashboardInfo) {
+        if (dashboardInfo.registrationDate) {
+          userData.registerDate = dashboardInfo.registrationDate;
+        }
+        userData.lastQuizDate = dashboardInfo.lastQuizDate || '';
+        if (dashboardInfo.submissionDate) {
+          userData.submissionDate = dashboardInfo.submissionDate;
+        }
+      }
+
+      const registrationDisplay = userData.registerDate
+        ? new Date(userData.registerDate).toLocaleString()
+        : 'Not available';
+      const lastQuizDisplay = userData.lastQuizDate
+        ? new Date(userData.lastQuizDate).toLocaleString()
+        : (isAuthenticated ? 'No quiz activity yet' : 'Login to view');
+      const submissionDisplay = userData.submissionDate
+        ? new Date(userData.submissionDate).toLocaleString()
+        : 'Pending final review';
+
       document.getElementById('contentArea').innerHTML = `
-        <div style="text-align:center; padding-top:50px;">
-          <h1>Welcome, ${userData.firstName} ${userData.lastName}</h1>
-          <p>Select a section on the left to start your training.</p>
-          <div style="margin-top: 30px; padding: 20px; background: var(--card); border-radius: 12px; border: 1px solid var(--border);">
-            <h3>Your Information</h3>
-            <p><strong>Registration Date:</strong> ${new Date(userData.registerDate).toLocaleString()}</p>
+        <div class="home-dashboard">
+          <div class="home-welcome">
+            <h1>Welcome, ${userData.firstName} ${userData.lastName}</h1>
+            <p>Select a section on the left to start your training.</p>
           </div>
+          <div class="info-section">
+            <div class="info-header">
+              <div>
+                <h3>Your Information</h3>
+                <p>Track your enrollment timeline and assessment activity.</p>
+              </div>
+            </div>
+            <div class="info-grid">
+              <div class="info-card">
+                <span class="info-label">Registration Date</span>
+                <span class="info-value">${registrationDisplay}</span>
+                <span class="info-hint">Official enrollment timestamp</span>
+              </div>
+              <div class="info-card">
+                <span class="info-label">Last Quiz Date</span>
+                <span class="info-value">${lastQuizDisplay}</span>
+                <span class="info-hint">Updates whenever you answer a quiz question</span>
+              </div>
+              <div class="info-card">
+                <span class="info-label">Submission Date</span>
+                <span class="info-value">${submissionDisplay}</span>
+                <span class="info-hint">Populated after final score submission</span>
+              </div>
+            </div>
+          </div>
+          <div class="payment-card" style="display:none;">
+            <div class="payment-card-header">
+              <div>
+                <h3>Payment Information</h3>
+                <p>Stripe integration coming soon. These fields will auto-fill once tuition is processed.</p>
+              </div>
+              <span class="payment-status">Awaiting transaction</span>
+            </div>
+            <div class="payment-grid">
+              <div class="payment-field">
+                <span class="payment-label">Transaction Number</span>
+                <span class="payment-value">TBD</span>
+              </div>
+              <div class="payment-field">
+                <span class="payment-label">Transaction Date</span>
+                <span class="payment-value">Not yet processed</span>
+              </div>
+              <div class="payment-field">
+                <span class="payment-label">Description</span>
+                <span class="payment-value">Stripe payment placeholder</span>
+              </div>
+              <div class="payment-field">
+                <span class="payment-label">Payment Method</span>
+                <span class="payment-value">Stripe (pending)</span>
+              </div>
+              <div class="payment-field">
+                <span class="payment-label">Price</span>
+                <span class="payment-value">$0.00</span>
+              </div>
+            </div>
+            <p class="payment-note">Need to add a payment? Your secure link will appear here once enabled.</p>
+          </div>
+          ${isAuthenticated ? `
+          <div id="globalActionBar" class="global-action-bar">
+            <button class="global-action-btn" onclick="showUserDashboard()">Main Menu</button>
+            <button class="global-action-btn" onclick="logout()">Logout</button>
+            <button id="submitScoresBtn" class="global-action-btn accent" onclick="submitScores()" style="display:none">Submit Scores</button>
+            <button class="global-action-btn" disabled title="Available after certification is enabled">Certificate</button>
+          </div>
+          ` : ''}
         </div>`;
-      updateGlobalDisplay();
+      
+      // Update display for legacy quiz system if not authenticated
+      if (!isAuthenticated) {
+        await updateGlobalDisplay();
+      }
+      updateActionBarVisibility();
     }
 
     function showContent(id) {
-      currentQuizId = null;
-      const content = getContentForSection(id);
-      document.getElementById('contentArea').innerHTML = `
-        <div class="quiz-card">
-          <div class="quiz-header">
-            <h2 style="margin:0; color: var(--primary);">${quizRegistry[id].title}</h2>
-          </div>
-          <div class="content-section">
-            ${content}
-            <button class="btn btn-primary" style="width: 100%; margin-top: 30px; padding: 15px; font-size: 1.1rem;" onclick="loadQuiz(${id})">Take Quiz for ${quizRegistry[id].title}</button>
-          </div>
-        </div>`;
+      // Redirect to the new database content function
+      showDatabaseContent(id);
     }
 
+    // Load content from database instead of hardcoded function
+    async function showDatabaseContent(sectionId) {
+      console.log(`🔍 [CONTENT] Loading database content for section ${sectionId}`);
+      
+      try {
+        // Check authentication
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+          console.error('❌ [CONTENT] No authentication token found');
+          alert('Please log in again to view content.');
+          return;
+        }
+        
+        // Show loading indicator
+        console.log('🔍 [CONTENT] Setting up content area');
+        const contentArea = document.getElementById('contentArea');
+        if (contentArea) {
+          contentArea.innerHTML = '<div class="loading">Loading section content...</div>';
+          contentArea.style.display = 'block';
+          console.log('✅ [CONTENT] Content area prepared');
+        } else {
+          console.error('❌ [CONTENT] Content area element not found');
+          alert('Content area not found. Please refresh the page.');
+          return;
+        }
+        
+        const requestOptions = {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': authToken,
+            'Cache-Control': 'no-cache'
+          },
+          credentials: 'omit',
+          cache: 'no-cache'
+        };
+        
+        console.log(`📡 [CONTENT] Fetching from /api/section/${sectionId}/content`);
+        console.log('📡 [CONTENT] Request options:', requestOptions);
+        
+        const response = await fetch(`/api/section/${sectionId}/content`, requestOptions);
+        
+        console.log(`📡 [CONTENT] Response status: ${response.status}`);
+        console.log('📡 [CONTENT] Response headers:', Object.fromEntries(response.headers));
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`💥 [CONTENT] API Error (${response.status}):`, errorText);
+          throw new Error(`Failed to load content: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`✅ Received content for: ${data.sectionName}`);
+        
+        if (contentArea) {
+          contentArea.innerHTML = `
+            <div class="content-header">
+              <button class="back-button" onclick="showMainDashboard()">← Course Dashboard</button>
+              <h1>Section ${data.sectionNumber}: ${data.sectionName}</h1>
+            </div>
+            <div class="content-body">
+              ${data.content}
+            </div>
+          `;
+        }
+        
+        console.log(`✅ Content displayed successfully for section ${sectionId}`);
+        
+      } catch (error) {
+        console.error('💥 Error loading section content:', error);
+        
+        const contentArea = document.getElementById('contentArea');
+        if (contentArea) {
+          contentArea.innerHTML = `
+            <div class="content-header">
+              <button class="back-button" onclick="showMainDashboard()">← Course Dashboard</button>
+              <h1>Error Loading Content</h1>
+            </div>
+            <div class="error-message">
+              <p>Failed to load section content. Please try again.</p>
+              <p style="color: #666; font-size: 12px;">Error: ${error.message}</p>
+              <button onclick="showDatabaseContent(${sectionId})" class="retry-button">Retry</button>
+            </div>
+          `;
+        }
+      }
+    }
+
+    // Show main dashboard
+    function showMainDashboard() {
+      console.log('🏠 Returning to main dashboard');
+      showHome();
+      console.log('✅ Returned to main dashboard');
+    }
+
+    // Keep the old function as fallback but mark it as deprecated
     function getContentForSection(id) {
       if (id === 1) {
         return `
@@ -2038,14 +3442,698 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
       return '<p>Content not available for this section.</p>';
     }
 
-    function loadQuiz(id) {
-      recordStartDate();
-      if (!quizRegistry[id].questions.length) return alert("This section is empty.");
-      currentQuizId = id;
-      currentQIndex = 0;
-      sectionScores[id].needsReset = true;
-      renderQuizStep();
+    // Database-driven quiz functions
+    let currentQuizData = null;
+    let currentQuizProgress = null;
+    let activeCourseId = null;
+    let currentSectionId = null;
+    const sectionNameMap = {};
+
+    // Retake quiz functionality - using custom DHTML modal
+    var pendingRetakeQuizId = null;
+    var pendingRetakeSectionId = null;
+    var pendingRetakeIsLegacy = false;
+    
+    window.retakeQuiz = function retakeQuiz(quizId) {
+      console.log('🔄 Retake Quiz clicked for quiz ID:', quizId);
+      pendingRetakeQuizId = quizId;
+      pendingRetakeSectionId = currentQuizId;
+      pendingRetakeIsLegacy = false;
+      showRetakeModal();
     }
+    
+    function showRetakeModal() {
+      var modal = document.getElementById('retakeModal');
+      if (modal) {
+        modal.classList.add('active');
+        console.log('📢 Retake modal shown');
+      } else {
+        console.error('❌ Retake modal not found');
+      }
+    }
+    
+    function hideRetakeModal() {
+      var modal = document.getElementById('retakeModal');
+      if (modal) {
+        modal.classList.remove('active');
+        console.log('📢 Retake modal hidden');
+      }
+    }
+    
+    window.cancelRetakeQuiz = function cancelRetakeQuiz() {
+      console.log('❌ User cancelled retake');
+      pendingRetakeQuizId = null;
+      hideRetakeModal();
+    }
+    
+    window.confirmRetakeQuiz = function confirmRetakeQuiz() {
+      console.log('✅ User confirmed retake');
+      hideRetakeModal();
+      
+      if (pendingRetakeIsLegacy) {
+        performLegacyRetake();
+      } else {
+        performDatabaseRetake();
+      }
+    }
+    
+    function performDatabaseRetake() {
+      var quizId = pendingRetakeQuizId;
+      var sectionId = pendingRetakeSectionId;
+      console.log('🔄 Performing database retake for quiz:', quizId, 'section:', sectionId);
+      
+      var authToken = localStorage.getItem('authToken');
+      var xhr = new XMLHttpRequest();
+      xhr.open('DELETE', '/api/quiz/' + quizId + '/progress', false);
+      xhr.setRequestHeader('X-Auth-Token', authToken);
+      
+      try {
+        xhr.send();
+        console.log('📡 Response:', xhr.status);
+      } catch (e) {
+        console.error('❌ XHR error:', e);
+      }
+      
+      // Reset local state
+      pendingRetakeQuizId = null;
+      pendingRetakeSectionId = null;
+      
+      // Reset current quiz progress
+      currentQuizProgress = {
+        user_answers: {},
+        current_question: 0,
+        progress: 0,
+        is_completed: false
+      };
+      currentQIndex = 0;
+      
+      // Update the quiz label immediately to show reset
+      var quizLabel = document.getElementById('quizLabel' + sectionId);
+      if (quizLabel && currentQuizData && currentQuizData.questions) {
+        quizLabel.textContent = 'Quiz (0 / ' + currentQuizData.questions.length + ' Correct)';
+        quizLabel.classList.remove('passed', 'failed', 'in-progress');
+        quizLabel.classList.add('not-started');
+      }
+      
+      // Update global statistics from server
+      updateGlobalDisplay();
+      
+      // Reload the same section quiz instead of reloading the page
+      if (sectionId) {
+        console.log('🔄 Reloading section quiz:', sectionId);
+        loadQuizFromDatabase(sectionId);
+      } else {
+        // Fallback to page reload if section ID is not available
+        window.location.reload();
+      }
+    }
+    
+    window.retakeQuizLegacy = function retakeQuizLegacy(quizId) {
+      console.log('🔄 Retake Quiz Legacy clicked for quiz ID:', quizId);
+      pendingRetakeQuizId = quizId;
+      pendingRetakeIsLegacy = true;
+      showRetakeModal();
+    }
+    
+    function performLegacyRetake() {
+      var quizId = pendingRetakeQuizId;
+      console.log('🔄 Performing legacy retake for quiz:', quizId);
+      
+      // Reset legacy quiz data
+      if (sectionScores[quizId]) {
+        sectionScores[quizId] = { correct: 0, attempted: 0 };
+      }
+      
+      currentQIndex = 0;
+      pendingRetakeQuizId = null;
+      
+      updateGlobalDisplayClientSide();
+      renderQuizStep();
+      
+      console.log('✅ Legacy quiz reset successfully');
+    }
+
+    // Test function to verify retake functions are loaded
+    function testRetakeFunctions() {
+      console.log('🧪 Testing retake functions...');
+      console.log('retakeQuiz function exists:', typeof retakeQuiz === 'function');
+      console.log('retakeQuizLegacy function exists:', typeof retakeQuizLegacy === 'function');
+    }
+
+    // Make test function globally available
+    window.testRetakeFunctions = testRetakeFunctions;
+
+    function updateOverallProgressDisplay(overallProgress) {
+      console.log('📊 Updating overall progress display:', overallProgress);
+      
+      // Update header with overall progress
+      const header = document.querySelector('header h1');
+      if (header && overallProgress) {
+        const originalText = 'Brooklyn CDL ELDT Training';
+        const progressText = `${originalText} - Overall: ${overallProgress.sections_completed}/${overallProgress.total_sections} sections (${overallProgress.overall_percentage}%)`;
+        header.textContent = progressText;
+        
+        // Add progress indicator class
+        if (overallProgress.passed) {
+          header.className = 'progress-passed';
+        } else if (overallProgress.overall_percentage > 0) {
+          header.className = 'progress-in-progress';
+        } else {
+          header.className = 'progress-not-started';
+        }
+      }
+      
+      // Update or create progress summary in home content
+      const homeContent = document.querySelector('#home');
+      if (homeContent && overallProgress) {
+        let progressSummary = homeContent.querySelector('.progress-summary');
+        if (!progressSummary) {
+          progressSummary = document.createElement('div');
+          progressSummary.className = 'progress-summary';
+          homeContent.appendChild(progressSummary);
+        }
+        
+        const passedClass = overallProgress.passed ? 'passed' : '';
+        progressSummary.innerHTML = `
+          <div class="overall-progress ${passedClass}">
+            <h3>Course Progress Summary</h3>
+            <div class="progress-stats">
+              <div class="stat">
+                <span class="stat-label">Sections Completed:</span>
+                <span class="stat-value">${overallProgress.sections_completed}/${overallProgress.total_sections}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Overall Score:</span>
+                <span class="stat-value">${overallProgress.total_score}/${overallProgress.total_questions} (${overallProgress.overall_percentage}%)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">Course Status:</span>
+                <span class="stat-value ${overallProgress.passed ? 'passed' : 'not-passed'}">
+                  ${overallProgress.passed ? '✅ PASSED' : '📚 In Progress'}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    async function loadCourseFromDatabase() {
+      try {
+        console.log('🔄 Loading course from database...');
+        
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include'
+        };
+        
+        if (authToken) {
+          requestOptions.headers = {
+            'X-Auth-Token': authToken
+          };
+        }
+        
+        const coursesResponse = await fetch('/api/user/courses', requestOptions);
+        console.log('📡 Courses response status:', coursesResponse.status);
+        
+        if (coursesResponse.ok) {
+          const courses = await coursesResponse.json();
+          console.log('📚 Found courses:', courses);
+          
+          if (courses.length > 0) {
+            const courseId = courses[0].id; // Use first assigned course
+            console.log('🎯 Loading sections for course:', courseId);
+            await loadCourseSections(courseId);
+          } else {
+            console.log('❌ No courses found for user');
+          }
+        } else {
+          console.error('❌ Failed to fetch courses:', coursesResponse.statusText);
+        }
+      } catch (error) {
+        console.error('💥 Error loading course data:', error);
+        console.error('💥 Error details:', error.message, error.stack);
+      }
+    }
+
+    async function loadCourseSections(courseId) {
+      try {
+        console.log('🔍 Loading course sections for course ID:', courseId);
+        activeCourseId = courseId;
+        
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include',
+          cache: 'no-cache'  // Force fresh request
+        };
+        
+        if (authToken) {
+          requestOptions.headers = {
+            'X-Auth-Token': authToken,
+            'Cache-Control': 'no-cache'
+          };
+        } else {
+          requestOptions.headers = {
+            'Cache-Control': 'no-cache'
+          };
+        }
+        
+        console.log('📡 Making request to /api/course/' + courseId + '/sections');
+        console.log('📡 Request options:', requestOptions);
+        
+        const response = await fetch(`/api/course/${courseId}/sections`, requestOptions);
+        console.log('📡 Response status:', response.status);
+        console.log('📡 Response headers:', response.headers);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('📚 Received sections data:', data);
+          console.log('📚 Data type:', typeof data);
+          console.log('📚 Data is array:', Array.isArray(data));
+          console.log('📚 Data length:', data.length);
+          
+          // The API returns the sections array directly, not wrapped in an object
+          const sections = Array.isArray(data) ? data : data.sections;
+          
+          if (!sections || !Array.isArray(sections) || sections.length === 0) {
+            console.warn('⚠️ No sections returned from API');
+            console.warn('⚠️ Full response data:', JSON.stringify(data, null, 2));
+            throw new Error('No course sections available');
+          }
+          
+          // Load course progress
+          let courseProgress = null;
+          try {
+            const progressUrl = `/api/user/course-progress?courseId=${courseId}`;
+            const progressResponse = await fetch(progressUrl, {
+              headers: authToken ? { 'X-Auth-Token': authToken } : {}
+            });
+            if (progressResponse.ok) {
+              courseProgress = await progressResponse.json();
+              console.log('📊 Course progress loaded:', courseProgress);
+            } else {
+              console.log('⚠️ Progress API returned error:', progressResponse.status);
+            }
+          } catch (progressError) {
+            console.log('⚠️ Could not load progress data:', progressError.message);
+            // Continue without progress data
+            courseProgress = null;
+          }
+          
+          // Update the sidebar navigation with database sections
+          const nav = document.getElementById('sidebarNav');
+          if (!nav) {
+            console.error('❌ Sidebar navigation element (#sidebarNav) not found!');
+            throw new Error('Navigation element not found');
+          }
+          
+          console.log('🎯 Found sidebar element:', nav);
+          
+          let navHtml = '';
+          
+          sections.forEach((section, index) => {
+            sectionNameMap[section.id] = section.section_name;
+            // Find progress for this section
+            const sectionProgress = courseProgress && courseProgress.sections ? 
+              courseProgress.sections.find(p => p.section_id === section.id) : null;
+            
+            let progressText = 'Not Started';
+            let progressClass = 'not-started';
+            let scoreText = '';
+            
+            if (sectionProgress) {
+              if (sectionProgress.is_completed) {
+                const scorePercentage = sectionProgress.score && sectionProgress.total_questions > 0 
+                  ? Math.round((sectionProgress.score / sectionProgress.total_questions) * 100) 
+                  : 0;
+                progressText = `Completed (${scorePercentage}%)`;
+                progressClass = scorePercentage >= 80 ? 'passed' : 'failed';
+                scoreText = ` - Score: ${sectionProgress.score || 0}/${sectionProgress.total_questions || 0}`;
+              } else if (sectionProgress.progress_percentage > 0) {
+                progressText = `In Progress (${sectionProgress.progress_percentage}%)`;
+                progressClass = 'in-progress';
+              }
+            }
+            
+            console.log(`🏷️ Processing section ${index + 1}:`, section.section_name, '- Progress:', progressText);
+            navHtml += `
+              <div class="nav-item" onclick="toggleMenu('m${section.id}')">${section.section_name}</div>
+              <div id="m${section.id}" class="sub-menu">
+                <div class="sub-item" onclick="showDatabaseContent(${section.id}); closeMobileMenu();">Study Content</div>
+                <div id="quizLabel${section.id}" class="sub-item quiz-progress ${progressClass}" onclick="loadQuizFromDatabase(${section.id}); closeMobileMenu();">
+                  Quiz: ${progressText}${scoreText}
+                </div>
+              </div>
+            `;
+          });
+          
+          console.log('✅ Generated HTML:', navHtml);
+          nav.innerHTML = navHtml;
+          console.log('✅ Sidebar updated successfully');
+          
+          // Update overall progress display if available
+          if (courseProgress && courseProgress.overall) {
+            updateOverallProgressDisplay(courseProgress.overall);
+            // Also update the global display with server data
+            await updateGlobalDisplay();
+          }
+          
+        } else {
+          const errorText = await response.text();
+          console.error('❌ Error response:', response.status, errorText);
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+      } catch (error) {
+        console.error('💥 Error loading course sections:', error);
+        console.error('💥 Error details:', error.message, error.stack);
+        console.error('💥 Error type:', typeof error);
+        
+        // Show error to user
+        const nav = document.getElementById('sidebarNav');
+        if (nav) {
+          nav.innerHTML = `
+            <div class="nav-item error-message">
+              ❌ Error Loading Course Sections
+            </div>
+            <div class="nav-item error-message" style="font-size: 12px;">
+              ${error.message}
+            </div>
+            <div class="nav-item">
+              <button onclick="loadCourseSections(${courseId})">🔄 Retry</button>
+            </div>
+          `;
+        }
+        
+        // Note: Removed automatic fallback to prevent infinite loop
+        console.log('❌ Course sections could not be loaded');
+      }
+    }
+
+    async function loadQuizFromDatabase(sectionId) {
+      try {
+        console.log(`🎯 [QUIZ] Loading quiz for section ${sectionId}`);
+        recordStartDate();
+        
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+          console.error('❌ [QUIZ] No authentication token found');
+          alert('Please log in again to access quizzes.');
+          return;
+        }
+        
+        const requestOptions = {
+          credentials: 'include',
+          headers: {
+            'X-Auth-Token': authToken,
+            'Cache-Control': 'no-cache'
+          }
+        };
+        
+        console.log(`📡 [QUIZ] Fetching from /api/section/${sectionId}/quiz`);
+        console.log('📡 [QUIZ] Request options:', requestOptions);
+        
+        const response = await fetch(`/api/section/${sectionId}/quiz`, requestOptions);
+        
+        console.log(`📡 [QUIZ] Response status: ${response.status}`);
+        
+        if (response.ok) {
+          const quizData = await response.json();
+          console.log(`✅ [QUIZ] Quiz data received:`, quizData);
+          console.log(`✅ [QUIZ] Section name:`, quizData.sectionName);
+          
+          currentQuizId = sectionId;
+          currentSectionId = sectionId;
+          currentQuizData = quizData;
+          const derivedSectionName = quizData.sectionName || sectionNameMap[sectionId] || '';
+          currentQuizData.sectionName = derivedSectionName;
+          currentQuizProgress = quizData.progress || { current_question: 0, user_answers: {} };
+          
+          // Calculate the next unanswered question based on user_answers
+          let nextQuestionIndex = 0;
+          let allQuestionsAnswered = false;
+          if (currentQuizProgress.user_answers) {
+            const userAnswers = typeof currentQuizProgress.user_answers === 'string' 
+              ? JSON.parse(currentQuizProgress.user_answers) 
+              : currentQuizProgress.user_answers;
+            
+            console.log('📝 [QUIZ] User answers found:', userAnswers);
+            
+            allQuestionsAnswered = true;
+            for (let i = 0; i < quizData.questions.length; i++) {
+              const questionId = quizData.questions[i].id;
+              if (userAnswers[questionId] === undefined) {
+                nextQuestionIndex = i;
+                allQuestionsAnswered = false;
+                break;
+              }
+            }
+            
+            if (allQuestionsAnswered) {
+              nextQuestionIndex = quizData.questions.length;
+            }
+            
+            console.log(`🔍 [QUIZ] Next unanswered question index: ${nextQuestionIndex}`);
+          }
+          
+          currentQIndex = nextQuestionIndex;
+          if (allQuestionsAnswered) {
+            currentQuizProgress.is_completed = true;
+          }
+          
+          console.log(`🎯 [QUIZ] Starting at question ${currentQIndex + 1}`);
+          renderQuizStepFromDatabase();
+        } else {
+          const errorText = await response.text();
+          console.error(`💥 [QUIZ] API Error (${response.status}):`, errorText);
+          alert(`Quiz not found for this section. Error: ${response.status}`);
+        }
+      } catch (error) {
+        console.error('💥 [QUIZ] Error loading quiz:', error);
+        alert(`Error loading quiz: ${error.message}. Please try again.`);
+      }
+    }
+
+    function renderQuizStepFromDatabase() {
+      if (!currentQuizData || !currentQuizData.questions) return;
+      
+      const questions = currentQuizData.questions;
+      if (!questions.length) {
+        console.warn('⚠️ [QUIZ] No questions available to render');
+        return;
+      }
+      if (currentQuizProgress && (currentQuizProgress.is_completed || currentQIndex >= questions.length)) {
+        renderQuizCompletionSummary();
+        return;
+      }
+      const q = questions[currentQIndex];
+      const progress = ((currentQIndex + 1) / questions.length) * 100;
+
+      document.getElementById('contentArea').innerHTML = `
+        <div class="quiz-card">
+          <div class="quiz-header">
+            ${currentQuizData.sectionName ? `
+              <div style="width: 100%; text-align: center; margin-bottom: 4px;">
+                <span style="font-size: 1.05rem; color: var(--primary); font-weight: 700; letter-spacing: 0.4px;">${currentQuizData.sectionName}</span>
+              </div>
+            ` : ''}
+            <div style="display: flex; align-items: center; width: 100%; gap: 12px; flex-wrap: nowrap;">
+              <span style="font-weight: 600; flex: 1; font-size: 0.95rem;">Question ${currentQIndex + 1}/${questions.length}</span>
+              <div style="flex: 0 0 auto; display: flex; justify-content: center; min-width: 130px;">
+                <button class="btn btn-warning" onclick="retakeQuiz(${currentQuizData.quizId})">Retake Quiz</button>
+              </div>
+              <div style="flex: 1; display: flex; justify-content: flex-end; min-width: 160px;">
+                <div class="progress-bar" style="margin: 0; width: 180px; max-width: 100%;"><div class="progress-fill" style="width:${progress}%"></div></div>
+              </div>
+            </div>
+          </div>
+          <div style="padding:18px 20px">
+            <h3>${q.question_name}</h3>
+            <div id="quizForm">${q.choices.map(choice => `
+              <label class="option">
+                <input type="radio" name="ans" value="${choice.choice_name}"> 
+                <span>${choice.choice_description}</span>
+              </label>
+            `).join('')}</div>
+            <div id="feedback" class="feedback" style="display:none"></div>
+          </div>
+          <div style="padding:14px 18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; flex-wrap: wrap; gap: 6px">
+            <button class="back-button" onclick="showHome()">← Course Dashboard</button>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap">
+               <button id="subBtn" class="back-button" onclick="submitAnswerDatabase()">Submit Answer →</button>
+               <button id="nextBtn" class="back-button" style="display:none" onclick="nextQuestionDatabase()">Next Question →</button>
+            </div>
+          </div>
+        </div>`;
+      
+      // Restore previous answer if available
+      if (currentQuizProgress.user_answers) {
+        const userAnswers = typeof currentQuizProgress.user_answers === 'string' 
+          ? JSON.parse(currentQuizProgress.user_answers) 
+          : currentQuizProgress.user_answers;
+        
+        // Use the question id from the database
+        const questionId = q.id;
+        if (userAnswers[questionId]) {
+          const radio = document.querySelector(`input[name="ans"][value="${userAnswers[questionId]}"]`);
+          if (radio) radio.checked = true;
+        }
+      }
+    }
+
+    function renderQuizCompletionSummary(override = {}) {
+      if (!currentQuizData || !document.getElementById('contentArea')) {
+        return;
+      }
+      const questions = currentQuizData.questions || [];
+      const totalQuestions = questions.length || override.totalQuestions || 0;
+      const score = override.score ?? currentQuizProgress.score ?? 0;
+      const percentage = override.percentage ?? (totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0);
+      const passed = percentage >= 80;
+      currentQuizProgress.is_completed = true;
+      document.getElementById('contentArea').innerHTML = `
+        <div class="quiz-card" style="padding:24px; text-align:center;">
+          <h2 style="margin-bottom:20px;">Section Complete</h2>
+          ${currentQuizData.sectionName ? `<p style="margin-bottom:10px; color: var(--muted);">${currentQuizData.sectionName}</p>` : ''}
+          <div style="margin: 30px 0;">
+            <div style="font-size: 3rem; margin: 20px 0; color: ${passed ? 'var(--accent)' : 'var(--danger)'}">${percentage}%</div>
+            <p>Score: ${score} / ${totalQuestions}</p>
+            <p>${passed ? '🎉 Congratulations! This section is passed.' : '📚 Keep practicing and retake the section.'}</p>
+            <p style="color: #666; font-size: 14px; margin-top: 20px;">📊 Your answers are saved in the system.</p>
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button class="back-button" onclick="showHome();">← Course Dashboard</button>
+            <button class="back-button" onclick="retakeQuiz(${currentQuizData.quizId})">Retake Quiz →</button>
+          </div>
+        </div>`;
+    }
+
+    async function submitAnswerDatabase() {
+      const selected = document.querySelector('input[name="ans"]:checked');
+      if (!selected) return alert("Please select an option.");
+
+      const questions = currentQuizData.questions;
+      const q = questions[currentQIndex];
+      const correctChoice = q.choices.find(choice => choice.is_correct);
+      const isCorrect = selected.value === correctChoice.choice_name;
+
+      // Update user answers
+      let userAnswers = currentQuizProgress.user_answers || {};
+      if (typeof userAnswers === 'string') {
+        userAnswers = JSON.parse(userAnswers);
+      }
+      // Use the question id from the database, not the array index
+      const questionId = q.id;
+      userAnswers[questionId] = selected.value;
+
+      // Calculate progress
+      const progress = Math.round(((currentQIndex + 1) / questions.length) * 100);
+      const isCompleted = currentQIndex >= questions.length - 1;
+
+      // Save progress to database
+      try {
+        const authToken = localStorage.getItem('authToken');
+        await fetch(`/api/quiz/${currentQuizData.quizId}/progress`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Auth-Token': authToken
+          },
+          body: JSON.stringify({
+            currentQuestion: currentQIndex,
+            userAnswers: userAnswers,
+            progress: progress,
+            isCompleted: isCompleted
+          })
+        });
+
+        // Update local progress
+        currentQuizProgress.user_answers = userAnswers;
+        currentQuizProgress.progress = progress;
+        currentQuizProgress.current_question = currentQIndex;
+        
+        // Refresh global progress statistics
+        await updateGlobalDisplay();
+      } catch (error) {
+        console.error('Error saving progress:', error);
+      }
+
+      // Show feedback
+      document.getElementById('feedback').style.display = 'block';
+      document.getElementById('feedback').innerHTML = isCorrect ? "✓ Correct" : "✗ Incorrect";
+      document.getElementById('feedback').className = "feedback " + (isCorrect ? "correct" : "incorrect");
+
+      document.getElementById('subBtn').style.display = 'none';
+      document.getElementById('nextBtn').style.display = 'inline-block';
+    }
+
+    function nextQuestionDatabase() {
+      const questions = currentQuizData.questions;
+      
+      if (currentQIndex < questions.length - 1) {
+        currentQIndex++;
+        renderQuizStepFromDatabase();
+      } else {
+        // Quiz completed - calculate final score and submit
+        finishQuizDatabase();
+      }
+    }
+
+    async function finishQuizDatabase() {
+      try {
+        const questions = currentQuizData.questions;
+        let userAnswers = currentQuizProgress.user_answers || {};
+        if (typeof userAnswers === 'string') {
+          userAnswers = JSON.parse(userAnswers);
+        }
+
+        // Calculate score - use question id from database, not array index
+        let score = 0;
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          const correctChoice = q.choices.find(choice => choice.is_correct);
+          // Use question id instead of array index i
+          if (userAnswers[q.id] === correctChoice.choice_name) {
+            score++;
+          }
+        }
+
+        // Submit final results
+        const authToken = localStorage.getItem('authToken');
+        const submitResponse = await fetch(`/api/quiz/${currentQuizData.quizId}/submit`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Auth-Token': authToken
+          },
+          body: JSON.stringify({
+            userAnswers: userAnswers,
+            score: score,
+            totalQuestions: questions.length
+          })
+        });
+
+        if (submitResponse.ok) {
+          const result = await submitResponse.json();
+          
+          // Refresh the course progress to show updated scores
+          console.log('🔄 Refreshing course progress after quiz completion');
+          await loadCourseFromDatabase();
+          currentQuizProgress.score = result.score;
+          currentQuizProgress.is_completed = true;
+          currentQIndex = questions.length;
+          renderQuizCompletionSummary({
+            score: result.score,
+            totalQuestions: questions.length,
+            percentage: result.percentage
+          });
+        }
+      } catch (error) {
+        console.error('Error submitting quiz:', error);
+        alert("Error submitting quiz results. Please try again.");
+      }
+    }
+
+    // Legacy quiz functions (kept for compatibility with existing hardcoded sections)
 
     function renderQuizStep() {
       const data = quizRegistry[currentQuizId];
@@ -2055,21 +4143,33 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
       document.getElementById('contentArea').innerHTML = `
         <div class="quiz-card">
           <div class="quiz-header">
-            <span>Section ${currentQuizId}: Question ${currentQIndex + 1}/${data.questions.length}</span>
-            <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+            ${data.title ? `
+              <div style="width: 100%; text-align: center; margin-bottom: 4px;">
+                <span style="font-size: 1.05rem; color: var(--primary); font-weight: 700; letter-spacing: 0.4px;">${data.title}</span>
+              </div>
+            ` : ''}
+            <div style="display: flex; align-items: center; width: 100%; gap: 12px; flex-wrap: nowrap;">
+              <span style="font-weight: 600; flex: 1; font-size: 0.95rem;">Section ${currentQuizId}: Question ${currentQIndex + 1}/${data.questions.length}</span>
+              <div style="flex: 0 0 auto; display: flex; justify-content: center; min-width: 130px;">
+                <button class="btn btn-warning" onclick="retakeQuizLegacy(${currentQuizId})">Retake Quiz</button>
+              </div>
+              <div style="flex: 1; display: flex; justify-content: flex-end; min-width: 160px;">
+                <div class="progress-bar" style="margin: 0; width: 180px; max-width: 100%;"><div class="progress-fill" style="width:${progress}%"></div></div>
+              </div>
+            </div>
           </div>
-          <div style="padding:30px">
+          <div style="padding:18px 20px">
             <h3>${q.q}</h3>
             <div id="quizForm">${Object.entries(q.options).map(([k,v]) => `
               <label class="option"><input type="radio" name="ans" value="${k}"> <span>${v}</span></label>
             `).join('')}</div>
             <div id="feedback" class="feedback" style="display:none"></div>
           </div>
-          <div style="padding:20px; border-top:1px solid var(--border); display:flex; justify-content:space-between; flex-wrap: wrap; gap: 10px">
-            <button class="btn btn-outline" onclick="showHome()">Back to Dashboard</button>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap">
-               <button id="subBtn" class="btn btn-primary" onclick="submitAnswer()">Submit Answer</button>
-               <button id="nextBtn" class="btn btn-primary" style="display:none" onclick="nextQuestion()">Next Question</button>
+          <div style="padding:14px 18px; border-top:1px solid var(--border); display:flex; justify-content:space-between; flex-wrap: wrap; gap: 6px">
+            <button class="back-button" onclick="showHome()">← Course Dashboard</button>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap">
+               <button id="subBtn" class="back-button" onclick="submitAnswer()">Submit Answer →</button>
+               <button id="nextBtn" class="back-button" style="display:none" onclick="nextQuestion()">Next Question →</button>
             </div>
           </div>
         </div>`;
@@ -2098,7 +4198,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
       document.getElementById('subBtn').style.display = 'none';
       document.getElementById('nextBtn').style.display = 'inline-block';
 
-      updateGlobalDisplay();
+      updateGlobalDisplayClientSide();
     }
 
     function nextQuestion() {
@@ -2107,16 +4207,113 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
         renderQuizStep();
       } else {
         document.getElementById('contentArea').innerHTML = `
-          <div class="quiz-card" style="padding:40px; text-align:center;">
+          <div class="quiz-card" style="padding:24px; text-align:center;">
             <h2>Section Complete!</h2>
             <p>Section Score: ${sectionScores[currentQuizId].correct} / ${quizRegistry[currentQuizId].questions.length}</p>
-            <button class="btn btn-primary" onclick="showHome()">Back to Dashboard</button>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+              <button class="back-button" onclick="showHome()">← Course Dashboard</button>
+              <button class="btn btn-warning" onclick="retakeQuizLegacy(${currentQuizId})">Retake Quiz</button>
+            </div>
           </div>`;
-        updateGlobalDisplay();
+        updateGlobalDisplayClientSide();
       }
     }
 
-    function updateGlobalDisplay() {
+    async function updateGlobalDisplay() {
+      try {
+        // Get progress data from server instead of using client-side calculations
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include'
+        };
+        
+        if (authToken) {
+          requestOptions.headers = {
+            'X-Auth-Token': authToken
+          };
+        }
+        
+        let progressUrl = '/api/user/course-progress';
+        if (activeCourseId) {
+          progressUrl += `?courseId=${activeCourseId}`;
+        }
+        const progressResponse = await fetch(progressUrl, requestOptions);
+        
+        if (progressResponse.ok) {
+          const progressData = await progressResponse.json();
+          console.log('📊 Using server-side progress data for global display:', progressData);
+          
+          const totalCorrect = progressData.overall.total_score;
+          const totalPossible = progressData.overall.total_questions; 
+          const totalAttempted = progressData.overall.total_attempted;
+          
+          // Update global displays with server data
+          const globalCountEl = document.getElementById('globalCount');
+          globalCountEl.textContent = `${totalCorrect} / ${totalPossible} Correct`;
+          
+          const pct = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
+          
+          // Apply color to Overall Score - white/inherit by default, green when passed
+          if (pct >= 80 && totalAttempted >= totalPossible) {
+            globalCountEl.style.color = 'var(--accent)';
+          } else {
+            globalCountEl.style.color = 'inherit';
+          }
+          
+          const pctEl = document.getElementById('pctBox');
+          pctEl.textContent = pct + "%";
+          
+          document.getElementById('attemptedBox').textContent = `Total Attempted: ${totalAttempted}`;
+          
+          if (totalAttempted >= (progressData.overall.total_sections * 0.8)) {
+            pctEl.style.color = (pct >= 80) ? 'var(--accent)' : 'var(--danger)';
+          } else {
+            pctEl.style.color = 'inherit';
+          }
+          
+          // Show Submit Scores button only if percentage is 80% or higher
+          const submitScoresBtn = document.getElementById('submitScoresBtn');
+          if (submitScoresBtn) {
+            if (pct >= 80) {
+              submitScoresBtn.style.display = 'block';
+            } else {
+              submitScoresBtn.style.display = 'none';
+            }
+          }
+          
+          // Update individual quiz labels with server data
+          progressData.sections.forEach(section => {
+            const label = document.getElementById(`quizLabel${section.quiz_id}`);
+            if (label) {
+              label.textContent = `Quiz (${section.score} / ${section.total_questions} Correct)`;
+              // Apply color class based on progress
+              label.classList.remove('passed', 'failed', 'in-progress', 'not-started');
+              if (section.is_completed) {
+                const scorePercentage = section.total_questions > 0 ? (section.score / section.total_questions) * 100 : 0;
+                label.classList.add(scorePercentage >= 80 ? 'passed' : 'failed');
+              } else if (section.progress_percentage > 0) {
+                label.classList.add('in-progress');
+              } else {
+                label.classList.add('not-started');
+              }
+            }
+          });
+          
+        } else {
+          console.log('⚠️ Could not get progress data, falling back to client-side calculation');
+          // Fallback to original client-side calculation if server fails
+          updateGlobalDisplayClientSide();
+        }
+        
+      } catch (error) {
+        console.error('❌ Error fetching progress data:', error);
+        // Fallback to original client-side calculation if server fails  
+        updateGlobalDisplayClientSide();
+      }
+    }
+    
+    function updateGlobalDisplayClientSide() {
+      // Original client-side calculation as fallback
       let totalCorrect = 0;
       let totalAttempted = 0;
       const totalPossible = calculateTotalQuestions();
@@ -2128,12 +4325,32 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
         const label = document.getElementById(`quizLabel${id}`);
         if (label) {
           label.textContent = `Quiz (${s.correct} / ${quizRegistry[id].questions.length} Correct)`;
+          // Apply color class based on progress
+          label.classList.remove('passed', 'failed', 'in-progress', 'not-started');
+          const totalQuestions = quizRegistry[id].questions.length;
+          if (s.attempted >= totalQuestions) {
+            const scorePercentage = totalQuestions > 0 ? (s.correct / totalQuestions) * 100 : 0;
+            label.classList.add(scorePercentage >= 80 ? 'passed' : 'failed');
+          } else if (s.attempted > 0) {
+            label.classList.add('in-progress');
+          } else {
+            label.classList.add('not-started');
+          }
         }
       });
 
-      document.getElementById('globalCount').textContent = `${totalCorrect} / ${totalPossible} Correct`;
-
+      const globalCountEl = document.getElementById('globalCount');
+      globalCountEl.textContent = `${totalCorrect} / ${totalPossible} Correct`;
+      
       const pct = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
+      
+      // Apply color to Overall Score - white/inherit by default, green when passed
+      if (pct >= 80 && totalAttempted >= totalPossible) {
+        globalCountEl.style.color = 'var(--accent)';
+      } else {
+        globalCountEl.style.color = 'inherit';
+      }
+
       const pctEl = document.getElementById('pctBox');
       pctEl.textContent = pct + "%";
 
@@ -2143,6 +4360,16 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
         pctEl.style.color = (pct >= 80) ? 'var(--accent)' : 'var(--danger)';
       } else {
         pctEl.style.color = 'inherit';
+      }
+      
+      // Show Submit Scores button only if percentage is 80% or higher
+      const submitScoresBtn = document.getElementById('submitScoresBtn');
+      if (submitScoresBtn) {
+        if (pct >= 80) {
+          submitScoresBtn.style.display = 'block';
+        } else {
+          submitScoresBtn.style.display = 'none';
+        }
       }
     }
 
@@ -2173,7 +4400,6 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
             if (window.innerWidth <= 768) {
               document.querySelector('.menu-toggle').style.display = 'block';
             }
-            document.getElementById('submitScoresBtn').style.display = 'block';
             
             // Initialize the sidebar and show home
             initSidebar();
