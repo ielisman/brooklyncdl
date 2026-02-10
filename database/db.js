@@ -19,7 +19,7 @@ console.log('Raw password value check:', rawPassword ? 'has value' : 'empty/unde
 const dbConfig = {
   user: process.env.DB_USER || 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'brooklyncdl_eldt',
+  database: process.env.DB_NAME || 'eldt',
   password: rawPassword || '',
   port: parseInt(process.env.DB_PORT) || 5432,
   ssl: false,

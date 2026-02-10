@@ -25,9 +25,9 @@ RUN chown -R nodejs:nodejs /app
 USER nodejs
 
 # Set environment variable for internal port
-ENV PORT=3000
+ENV PORT=80
 
-# Expose port 80 for external web server access
+# Expose port 80 for web access
 EXPOSE 80
 
 # Start the npm server
