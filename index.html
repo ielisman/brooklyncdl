@@ -2222,7 +2222,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
           ` : ''}
         </div>`;
       
-      // Update display to show submit button if score >= 31%
+      // Update display to show submit button if score >= 80%
       await updateGlobalDisplay();
       
       // Hide floating button on dashboard since it's already in the menu
@@ -2451,8 +2451,8 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
           
           const floatingSubmitBtn = document.getElementById('floatingSubmitBtn');
           if (floatingSubmitBtn) {
-            floatingSubmitBtn.style.display = pct >= 31 ? 'block' : 'none';
-            console.log(`🔘 Floating button ${pct >= 31 ? 'shown' : 'hidden'} - score: ${pct}%`);
+            floatingSubmitBtn.style.display = pct >= 80 ? 'block' : 'none';
+            console.log(`🔘 Floating button ${pct >= 80 ? 'shown' : 'hidden'} - score: ${pct}%`);
           }
         }
       } else {
@@ -2790,10 +2790,10 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
           console.log(`🎯 [QUIZ] Starting at question ${currentQIndex + 1}`);
           renderQuizStepFromDatabase();
           
-          // Update global display to show submit button if score >= 31%
+          // Update global display to show submit button if score >= 80%
           await updateGlobalDisplay();
           
-          // Show floating button in quiz view if score >= 31%
+          // Show floating button in quiz view if score >= 80%
           const progressUrl = `/api/user/course-progress?courseId=${activeCourseId || 1}`;
           const progressResponse = await fetch(progressUrl, {
             headers: authToken ? { 'X-Auth-Token': authToken } : {},
@@ -2808,7 +2808,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
             
             const floatingSubmitBtn = document.getElementById('floatingSubmitBtn');
             if (floatingSubmitBtn) {
-              floatingSubmitBtn.style.display = pct >= 31 ? 'block' : 'none';
+              floatingSubmitBtn.style.display = pct >= 80 ? 'block' : 'none';
             }
           }
         } else {
@@ -2978,8 +2978,8 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
           
           const floatingSubmitBtn = document.getElementById('floatingSubmitBtn');
           if (floatingSubmitBtn) {
-            floatingSubmitBtn.style.display = pct >= 31 ? 'block' : 'none';
-            console.log(`🔘 Floating button ${pct >= 31 ? 'shown' : 'hidden'} after answer - score: ${pct}%`);
+            floatingSubmitBtn.style.display = pct >= 80 ? 'block' : 'none';
+            console.log(`🔘 Floating button ${pct >= 80 ? 'shown' : 'hidden'} after answer - score: ${pct}%`);
           }
         }
       } catch (error) {
@@ -3048,7 +3048,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
           console.log('🔄 Refreshing course progress after quiz completion');
           await loadCourseFromDatabase();
           
-          // Update global display to immediately show submit scores button if score >= 31%
+          // Update global display to immediately show submit scores button if score >= 80%
           await updateGlobalDisplay();
           
           currentQuizProgress.score = result.score;
@@ -3120,12 +3120,12 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
             pctEl.style.color = 'inherit';
           }
           
-          // Show Submit Scores button if percentage is 31% or higher
+          // Show Submit Scores button if percentage is 80% or higher
           const submitScoresBtn = document.getElementById('submitScoresBtn');
           const certificateBtn = document.getElementById('certificateBtn');
           
           if (submitScoresBtn) {
-            if (pct >= 31) {
+            if (pct >= 80) {
               submitScoresBtn.style.display = 'block';
             } else {
               submitScoresBtn.style.display = 'none';
@@ -3137,7 +3137,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
           
           // Show Certificate button if percentage is 80% or higher (passed)
           if (certificateBtn) {
-            if (pct >= 31 && totalAttempted >= totalPossible) {
+            if (pct >= 80 && totalAttempted >= totalPossible) {
               certificateBtn.style.display = 'block';
             } else {
               certificateBtn.style.display = 'none';
