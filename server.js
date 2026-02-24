@@ -576,11 +576,34 @@ app.post('/api/logout', (req, res) => {
 });
 
 // Check authentication status
-app.get('/api/auth/status', authenticateToken, (req, res) => {
-  res.json({
-    authenticated: true,
-    user: req.user
-  });
+app.get('/api/auth/status', authenticateToken, async (req, res) => {
+  try {
+    // Get user type and company_id for the authenticated user
+    const userTypeResult = await db.query(
+      `SELECT ut.user_type, ut.company_id 
+       FROM user_types ut 
+       WHERE ut.user_id = $1`,
+      [req.user.userId]
+    );
+
+    const userType = userTypeResult.rows.length > 0 ? userTypeResult.rows[0].user_type : 'Student';
+    const companyId = userTypeResult.rows.length > 0 ? userTypeResult.rows[0].company_id : null;
+
+    res.json({
+      authenticated: true,
+      user: {
+        ...req.user,
+        userType: userType,
+        companyId: companyId
+      }
+    });
+  } catch (error) {
+    console.error('Error getting auth status:', error);
+    res.json({
+      authenticated: true,
+      user: req.user
+    });
+  }
 });
 
 // Get full user profile
@@ -1567,6 +1590,363 @@ app.get('/api/user/dashboard-info', authenticateToken, async (req, res) => {
     res.status(500).json({ message: 'Server error loading dashboard info', details: error.message });
   }
 });
+
+// ============================================
+// ADMIN ENDPOINTS
+// ============================================
+
+// Middleware to check admin privileges
+async function authenticateAdmin(req, res, next) {
+  const token = req.cookies.token || 
+                req.headers['authorization']?.split(' ')[1] || 
+                req.headers['x-auth-token'];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, async (err, user) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+
+    try {
+      // Check if user has Admin privileges
+      const userTypeResult = await db.query(
+        `SELECT ut.user_type, ut.company_id 
+         FROM user_types ut 
+         WHERE ut.user_id = $1`,
+        [user.userId]
+      );
+
+      if (userTypeResult.rows.length === 0 || userTypeResult.rows[0].user_type !== 'Admin') {
+        return res.status(403).json({ error: 'Admin privileges required' });
+      }
+
+      req.user = user;
+      req.adminCompanyId = userTypeResult.rows[0].company_id;
+      console.log(`✅ Admin authenticated - User ID: ${user.userId}, Company ID: ${req.adminCompanyId}`);
+      next();
+    } catch (error) {
+      console.error('Error checking admin privileges:', error);
+      return res.status(500).json({ error: 'Server error checking privileges' });
+    }
+  });
+}
+
+// Get all students for admin's company
+app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
+  try {
+    const companyId = req.adminCompanyId;
+    console.log(`📚 [ADMIN] Loading students for company ID: ${companyId}`);
+
+    // If company_id = 0, admin can see all students, otherwise only their company
+    const companyFilter = companyId === 0 ? '' : 'WHERE u.company_id = $1';
+    const params = companyId === 0 ? [] : [companyId];
+
+    const query = `
+      SELECT DISTINCT ON (u.id)
+        u.id as user_id,
+        u.first_name,
+        u.last_name,
+        u.state,
+        u.license_number,
+        u.dob,
+        u.registration_date,
+        c.id as course_id,
+        c.name as course_name,
+        uqpt_latest.last_quiz_date,
+        r.submitted_on,
+        COALESCE(r.total_score, uqpt_sum.total_score, 0) as total_score,
+        COALESCE(r.total_possible, uqpt_sum.total_questions, 0) as total_questions,
+        COALESCE(r.score_percentage, 
+          CASE 
+            WHEN uqpt_sum.total_questions > 0 THEN ROUND((uqpt_sum.total_score::numeric / uqpt_sum.total_questions::numeric) * 100, 2)
+            ELSE 0 
+          END, 0) as score_percentage
+      FROM users u
+      LEFT JOIN user_assigned_courses uac ON u.id = uac.user_id
+      LEFT JOIN courses c ON uac.course_id = c.id
+      LEFT JOIN (
+        SELECT user_id, MAX(modified_on) as last_quiz_date
+        FROM user_quiz_progress_tracker
+        GROUP BY user_id
+      ) uqpt_latest ON u.id = uqpt_latest.user_id
+      LEFT JOIN LATERAL (
+        SELECT submitted_on, total_score, total_possible, score_percentage
+        FROM results
+        WHERE user_assigned_course_id = uac.id
+        ORDER BY submitted_on DESC
+        LIMIT 1
+      ) r ON true
+      LEFT JOIN LATERAL (
+        SELECT 
+          SUM(uqpt.score) as total_score,
+          SUM(uqpt.total_questions) as total_questions
+        FROM user_quiz_progress_tracker uqpt
+        JOIN quizes q ON uqpt.quiz_id = q.id
+        WHERE uqpt.user_id = u.id AND q.course_id = c.id
+      ) uqpt_sum ON true
+      LEFT JOIN user_types ut ON u.id = ut.user_id
+      ${companyFilter}
+      ORDER BY u.id, u.registration_date DESC
+    `;
+
+    const result = await db.query(query, params);
+    console.log(`✅ [ADMIN] Found ${result.rows.length} students`);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('💥 Error loading students:', error);
+    res.status(500).json({ error: 'Server error loading students' });
+  }
+});
+
+// Get detailed quiz results for a specific student
+app.get('/api/admin/student-details/:userId', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const courseId = parseInt(req.query.courseId, 10) || 1;
+    const companyId = req.adminCompanyId;
+
+    console.log(`📊 [ADMIN] Loading details for user ${userId}, course ${courseId}`);
+
+    // Verify admin has access to this student
+    if (companyId !== 0) {
+      const accessCheck = await db.query(
+        `SELECT u.id FROM users u WHERE u.id = $1 AND u.company_id = $2`,
+        [userId, companyId]
+      );
+      if (accessCheck.rows.length === 0) {
+        return res.status(403).json({ error: 'Access denied to this student' });
+      }
+    }
+
+    // Get user's quiz progress data with answers
+    const progressQuery = `
+      SELECT uqpt.quiz_id, uqpt.user_answers, cs.id as section_id
+      FROM user_quiz_progress_tracker uqpt
+      JOIN quizes q ON uqpt.quiz_id = q.id
+      JOIN course_sections cs ON q.section_id = cs.id
+      WHERE uqpt.user_id = $1 AND cs.course_id = $2
+    `;
+    const progressResult = await db.query(progressQuery, [userId, courseId]);
+    
+    // Build a map of quiz_id -> user_answers
+    const userAnswersMap = {};
+    progressResult.rows.forEach(row => {
+      let answers = row.user_answers;
+      if (typeof answers === 'string') {
+        try {
+          answers = JSON.parse(answers);
+        } catch (e) {
+          answers = {};
+        }
+      }
+      userAnswersMap[row.quiz_id] = answers || {};
+    });
+
+    // Get sections and questions with correct answers
+    const query = `
+      SELECT 
+        cs.id as section_id,
+        cs.section_name,
+        cs.section_number,
+        q.id as quiz_id,
+        qq.id as question_id,
+        qq.question_name,
+        qmc_correct.choice_name as correct_answer,
+        ROW_NUMBER() OVER (PARTITION BY q.id ORDER BY qq.id) - 1 as question_index
+      FROM course_sections cs
+      JOIN quizes q ON cs.id = q.section_id
+      JOIN quiz_questions qq ON q.id = qq.quiz_id
+      LEFT JOIN quiz_multiple_choices qmc_correct ON qq.id = qmc_correct.question_id AND qmc_correct.is_correct = true
+      WHERE cs.course_id = $1 AND cs.active = true
+      ORDER BY cs.section_number, qq.id
+    `;
+
+    const result = await db.query(query, [courseId]);
+
+    // Group by sections and match user answers
+    const sections = {};
+    result.rows.forEach(row => {
+      if (!sections[row.section_id]) {
+        sections[row.section_id] = {
+          section_id: row.section_id,
+          section_name: row.section_name,
+          section_number: row.section_number,
+          questions: [],
+          score: 0,
+          total_questions: 0
+        };
+      }
+
+      // Get user's answer for this question from the JSON
+      const quizAnswers = userAnswersMap[row.quiz_id] || {};
+      const userAnswerById = quizAnswers[row.question_id?.toString()];
+      const userAnswerByIndex = quizAnswers[row.question_index?.toString()];
+      const userAnswer = userAnswerById || userAnswerByIndex || 'Not answered';
+      const isCorrect = userAnswer === row.correct_answer ? 1 : 0;
+
+      sections[row.section_id].questions.push({
+        question_id: row.question_id,
+        question_number: sections[row.section_id].questions.length + 1,
+        question_name: row.question_name,
+        correct_answer: row.correct_answer,
+        user_answer: userAnswer,
+        is_correct: isCorrect
+      });
+
+      sections[row.section_id].total_questions++;
+      if (isCorrect) {
+        sections[row.section_id].score++;
+      }
+    });
+
+    const sectionsArray = Object.values(sections);
+    console.log(`✅ [ADMIN] Loaded ${sectionsArray.length} sections`);
+
+    res.json({ sections: sectionsArray });
+  } catch (error) {
+    console.error('💥 Error loading student details:', error);
+    res.status(500).json({ error: 'Server error loading student details' });
+  }
+});
+
+// Get company information
+app.get('/api/admin/company', authenticateAdmin, async (req, res) => {
+  try {
+    const companyId = req.adminCompanyId;
+
+    if (companyId === 0) {
+      return res.json({}); // Super admin has no company
+    }
+
+    const result = await db.query(
+      `SELECT 
+        name as company_name,
+        address,
+        city,
+        state,
+        zip,
+        phone,
+        email
+      FROM company 
+      WHERE id = $1`,
+      [companyId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.json({});
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('💥 Error loading company info:', error);
+    res.status(500).json({ error: 'Server error loading company info' });
+  }
+});
+
+// Save/update company information
+app.post('/api/admin/company', authenticateAdmin, async (req, res) => {
+  try {
+    const companyId = req.adminCompanyId;
+    const { companyName, address, city, state, zip, phone, email } = req.body;
+
+    if (companyId === 0) {
+      return res.status(400).json({ error: 'Super admin cannot manage company info' });
+    }
+
+    // Check if company exists
+    const existingCompany = await db.query(
+      `SELECT id FROM company WHERE id = $1`,
+      [companyId]
+    );
+
+    if (existingCompany.rows.length === 0) {
+      // Insert new company
+      await db.query(
+        `INSERT INTO company (id, name, address, city, state, zip, phone, email, modified_on)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
+        [companyId, companyName, address, city, state, zip, phone, email]
+      );
+    } else {
+      // Update existing company
+      await db.query(
+        `UPDATE company 
+         SET name = $2, address = $3, city = $4, state = $5, zip = $6, 
+             phone = $7, email = $8, modified_on = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [companyId, companyName, address, city, state, zip, phone, email]
+      );
+    }
+
+    console.log(`✅ [ADMIN] Company info saved for company ID: ${companyId}`);
+    res.json({ success: true, message: 'Company information saved successfully' });
+  } catch (error) {
+    console.error('💥 Error saving company info:', error);
+    res.status(500).json({ error: 'Server error saving company info' });
+  }
+});
+
+// Add new admin user
+app.post('/api/admin/add-admin', authenticateAdmin, async (req, res) => {
+  try {
+    const companyId = req.adminCompanyId;
+    const { firstName, lastName, email, password } = req.body;
+
+    // Validate password
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Check if user already exists
+    const existingUser = await db.query(
+      `SELECT id FROM users WHERE email = $1`,
+      [email]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Insert new user
+    const userResult = await db.query(
+      `INSERT INTO users (company_id, first_name, last_name, email, registration_date, active)
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, true)
+       RETURNING id`,
+      [companyId, firstName, lastName, email]
+    );
+
+    const newUserId = userResult.rows[0].id;
+
+    // Insert login credentials
+    await db.query(
+      `INSERT INTO user_login (user_id, user_name, password_hash)
+       VALUES ($1, $2, $3)`,
+      [newUserId, email, passwordHash]
+    );
+
+    // Insert user type as Admin
+    await db.query(
+      `INSERT INTO user_types (user_id, user_type, company_id)
+       VALUES ($1, 'Admin', $2)`,
+      [newUserId, companyId]
+    );
+
+    console.log(`✅ [ADMIN] New admin user created: ${email} for company ${companyId}`);
+    res.json({ success: true, message: 'Admin user created successfully' });
+  } catch (error) {
+    console.error('💥 Error creating admin user:', error);
+    res.status(500).json({ error: 'Server error creating admin user' });
+  }
+});
+
+// ============================================
+// END ADMIN ENDPOINTS
+// ============================================
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

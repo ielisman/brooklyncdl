@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard - Brooklyn CDL ELDT Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Admin Dashboard Specific Styles */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e0e0e0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .admin-sidebar {
+      width: 260px;
+      background: rgba(20, 20, 30, 0.95);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .admin-sidebar h2 {
+      color: #4a90e2;
+      margin: 0 0 30px 0;
+      font-size: 20px;
+      text-align: center;
+      padding-bottom: 15px;
+      border-bottom: 2px solid rgba(74, 144, 226, 0.3);
+    }
+
+    .admin-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .admin-menu-item {
+      padding: 12px 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #e0e0e0;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .admin-menu-item:hover {
+      background: rgba(74, 144, 226, 0.2);
+      border-color: #4a90e2;
+      transform: translateX(5px);
+    }
+
+    .admin-menu-item.active {
+      background: rgba(74, 144, 226, 0.3);
+      border-color: #4a90e2;
+      font-weight: 600;
+    }
+
+    .admin-content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .admin-header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: #4a90e2;
+    }
+
+    .btn-logout {
+      padding: 10px 20px;
+      background: rgba(231, 76, 60, 0.2);
+      border: 1px solid #e74c3c;
+      color: #e74c3c;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-logout:hover {
+      background: rgba(231, 76, 60, 0.3);
+      transform: scale(1.05);
+    }
+
+    .students-table {
+      width: 100%;
+      background: rgba(20, 20, 30, 0.6);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .students-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .students-table thead {
+      background: rgba(74, 144, 226, 0.2);
+      border-bottom: 2px solid #4a90e2;
+    }
+
+    .students-table th {
+      padding: 15px 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #4a90e2;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .students-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+    }
+
+    .students-table tbody tr {
+      transition: background 0.2s ease;
+      cursor: pointer;
+    }
+
+    .students-table tbody tr:hover {
+      background: rgba(74, 144, 226, 0.1);
+    }
+
+    .expand-icon {
+      cursor: pointer;
+      font-size: 18px;
+      color: #4a90e2;
+      transition: transform 0.3s ease;
+      display: inline-block;
+      width: 24px;
+      text-align: center;
+    }
+
+    .expand-icon.expanded {
+      transform: rotate(45deg);
+    }
+
+    .details-row {
+      display: none;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .details-row.visible {
+      display: table-row;
+    }
+
+    .details-content {
+      padding: 20px;
+    }
+
+    .section-header {
+      font-weight: 600;
+      color: #4a90e2;
+      margin: 15px 0 10px 0;
+      font-size: 16px;
+      padding: 8px 12px;
+      background: rgba(74, 144, 226, 0.15);
+      border-radius: 6px;
+      border-left: 4px solid #4a90e2;
+      transition: background 0.2s ease;
+    }
+
+    .section-header:hover {
+      background: rgba(74, 144, 226, 0.25);
+    }
+
+    .section-questions {
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .question-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 1fr;
+      gap: 15px;
+      padding: 10px 12px;
+      margin: 5px 0;
+      border-radius: 6px;
+      font-size: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .question-row.correct {
+      background: rgba(39, 174, 96, 0.2);
+      border-color: #27ae60;
+    }
+
+    .question-row.incorrect {
+      background: rgba(231, 76, 60, 0.2);
+      border-color: #e74c3c;
+    }
+
+    .question-number {
+      font-weight: 600;
+      color: #4a90e2;
+    }
+
+    .user-answer,
+    .correct-answer {
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .company-form,
+    .admin-form {
+      max-width: 600px;
+      background: rgba(20, 20, 30, 0.6);
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #4a90e2;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #4a90e2;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-primary {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+    }
+
+    .score-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    .score-badge.passed {
+      background: rgba(39, 174, 96, 0.2);
+      color: #27ae60;
+      border: 1px solid #27ae60;
+    }
+
+    .score-badge.failed {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+      border: 1px solid #e74c3c;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #4a90e2;
+      font-size: 16px;
+    }
+
+    .error-message {
+      background: rgba(231, 76, 60, 0.2);
+      border: 1px solid #e74c3c;
+      color: #e74c3c;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .success-message {
+      background: rgba(39, 174, 96, 0.2);
+      border: 1px solid #27ae60;
+      color: #27ae60;
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+      }
+
+      .admin-sidebar {
+        width: 100%;
+        padding: 15px;
+      }
+
+      .admin-content {
+        padding: 15px;
+      }
+
+      .students-table {
+        overflow-x: auto;
+      }
+
+      .question-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Admin Sidebar -->
+  <div class="admin-sidebar">
+    <h2>🛠️ Admin Menu</h2>
+    <div class="admin-menu">
+      <button class="admin-menu-item active" onclick="showStudents()">
+        👥 Student Management
+      </button>
+      <button class="admin-menu-item" onclick="showCompanyInfo()">
+        🏢 Company Information
+      </button>
+      <button class="admin-menu-item" onclick="showAddAdmin()">
+        ➕ Add Admin User
+      </button>
+      <button class="admin-menu-item" onclick="window.location.href='index.html'">
+        🏠 Back to Main Platform
+      </button>
+    </div>
+  </div>
+
+  <!-- Admin Content Area -->
+  <div class="admin-content">
+    <div class="admin-header">
+      <h1 id="pageTitle">Student Management</h1>
+      <a href="#" class="btn-logout" onclick="logout()">Logout</a>
+    </div>
+
+    <div id="contentSection">
+      <div class="loading">Loading student data...</div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const PASSING_PERCENTAGE = 80;
+    let adminData = {
+      userId: null,
+      firstName: '',
+      lastName: '',
+      email: '',
+      companyId: null
+    };
+
+    // Date formatting functions
+    function formatDateOfBirth(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[date.getMonth()]}-${date.getDate()}-${date.getFullYear()}`;
+    }
+
+    function formatDateTime(dateString) {
+      if (!dateString) return 'N/A';
+      const dateStr = dateString.replace('T', ' ').replace('Z', '').trim();
+      const parts = dateStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
+      if (!parts) return 'N/A';
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const year = parts[1];
+      const month = months[parseInt(parts[2]) - 1];
+      const day = parseInt(parts[3]);
+      let hours = parseInt(parts[4]);
+      const minutes = parts[5];
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      return `${month} ${day}, ${year}, ${hours}:${minutes} ${ampm}`;
+    }
+
+    // Check admin authentication
+    async function checkAdminAuth() {
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include'
+        };
+        if (authToken) {
+          requestOptions.headers = { 'X-Auth-Token': authToken };
+        }
+
+        const response = await fetch('/api/auth/status', requestOptions);
+        if (!response.ok) {
+          window.location.href = 'index.html';
+          return false;
+        }
+
+        const result = await response.json();
+        if (!result.authenticated || result.user.userType !== 'Admin') {
+          alert('Access denied. Admin privileges required.');
+          window.location.href = 'index.html';
+          return false;
+        }
+
+        adminData = {
+          userId: result.user.userId,
+          firstName: result.user.firstName,
+          lastName: result.user.lastName,
+          email: result.user.email,
+          companyId: result.user.companyId || null
+        };
+
+        console.log('✅ Admin authenticated:', adminData);
+        return true;
+      } catch (error) {
+        console.error('❌ Auth error:', error);
+        window.location.href = 'index.html';
+        return false;
+      }
+    }
+
+    // Load students
+    async function showStudents() {
+      document.getElementById('pageTitle').textContent = 'Student Management';
+      setActiveMenuItem(0);
+
+      const contentSection = document.getElementById('contentSection');
+      contentSection.innerHTML = '<div class="loading">Loading student data...</div>';
+
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include'
+        };
+        if (authToken) {
+          requestOptions.headers = { 'X-Auth-Token': authToken };
+        }
+
+        const response = await fetch('/api/admin/students', requestOptions);
+        if (!response.ok) {
+          throw new Error('Failed to load students');
+        }
+
+        const students = await response.json();
+        console.log('📚 Loaded students:', students);
+
+        if (students.length === 0) {
+          contentSection.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--muted);">
+              <h3>No Students Found</h3>
+              <p>There are currently no students assigned to your company.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let tableHTML = `
+          <div class="students-table">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40px;"></th>
+                  <th>Name</th>
+                  <th>State</th>
+                  <th>License #</th>
+                  <th>DOB</th>
+                  <th>Course</th>
+                  <th>Registered</th>
+                  <th>Last Quiz</th>
+                  <th>Submitted</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        students.forEach((student, index) => {
+          const score = student.score_percentage || 0;
+          const scoreClass = score >= PASSING_PERCENTAGE ? 'passed' : 'failed';
+          const scoreText = `${student.total_score || 0}/${student.total_questions || 0} (${score}%)`;
+
+          tableHTML += `
+            <tr onclick="toggleDetails(${index})">
+              <td>
+                <span class="expand-icon" id="icon-${index}">+</span>
+              </td>
+              <td><strong>${student.first_name} ${student.last_name}</strong></td>
+              <td>${student.state || 'N/A'}</td>
+              <td>${student.license_number || 'N/A'}</td>
+              <td>${formatDateOfBirth(student.dob)}</td>
+              <td>${student.course_name || 'N/A'}</td>
+              <td>${formatDateTime(student.registration_date)}</td>
+              <td>${formatDateTime(student.last_quiz_date)}</td>
+              <td>${formatDateTime(student.submitted_on)}</td>
+              <td>
+                <span class="score-badge ${scoreClass}">${scoreText}</span>
+              </td>
+            </tr>
+            <tr class="details-row" id="details-${index}">
+              <td colspan="10">
+                <div class="details-content">
+                  <div class="loading">Loading detailed results...</div>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+
+        tableHTML += `
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        contentSection.innerHTML = tableHTML;
+
+        // Store student data for detail expansion
+        window.studentsData = students;
+
+      } catch (error) {
+        console.error('💥 Error loading students:', error);
+        contentSection.innerHTML = `
+          <div class="error-message">
+            <strong>Error:</strong> Failed to load student data. Please try again.
+          </div>
+        `;
+      }
+    }
+
+    // Toggle student details
+    async function toggleDetails(index) {
+      const detailsRow = document.getElementById(`details-${index}`);
+      const icon = document.getElementById(`icon-${index}`);
+
+      if (detailsRow.classList.contains('visible')) {
+        detailsRow.classList.remove('visible');
+        icon.textContent = '+';
+        icon.classList.remove('expanded');
+        return;
+      }
+
+      // Close other expanded rows
+      document.querySelectorAll('.details-row.visible').forEach(row => {
+        row.classList.remove('visible');
+      });
+      document.querySelectorAll('.expand-icon.expanded').forEach(ic => {
+        ic.textContent = '+';
+        ic.classList.remove('expanded');
+      });
+
+      // Expand this row
+      detailsRow.classList.add('visible');
+      icon.textContent = '+';
+      icon.classList.add('expanded');
+
+      // Load detailed data
+      const student = window.studentsData[index];
+      const detailsContent = detailsRow.querySelector('.details-content');
+
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include'
+        };
+        if (authToken) {
+          requestOptions.headers = { 'X-Auth-Token': authToken };
+        }
+
+        const response = await fetch(
+          `/api/admin/student-details/${student.user_id}?courseId=${student.course_id}`,
+          requestOptions
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to load details');
+        }
+
+        const details = await response.json();
+        console.log('📊 Student details:', details);
+
+        let detailHTML = '';
+
+        if (details.sections && details.sections.length > 0) {
+          details.sections.forEach((section, sectionIndex) => {
+            const sectionId = `section-${index}-${sectionIndex}`;
+            const questionsId = `questions-${index}-${sectionIndex}`;
+            
+            detailHTML += `
+              <div class="section-header" onclick="toggleSection('${questionsId}', '${sectionId}')" style="cursor: pointer;">
+                <span class="expand-icon" id="${sectionId}" style="display: inline-block; width: 20px; margin-right: 8px;">▼</span>
+                📚 ${section.section_name} - ${section.score}/${section.total_questions} correct (${Math.round((section.score / section.total_questions) * 100)}%)
+              </div>
+              <div id="${questionsId}" class="section-questions" style="display: block;">
+            `;
+
+            if (section.questions && section.questions.length > 0) {
+              section.questions.forEach(q => {
+                const isCorrect = q.user_answer === q.correct_answer;
+                const rowClass = isCorrect ? 'correct' : 'incorrect';
+                const icon = isCorrect ? '✅' : '❌';
+
+                detailHTML += `
+                  <div class="question-row ${rowClass}">
+                    <div class="question-number">${icon} Q${q.question_number}</div>
+                    <div class="user-answer">
+                      <strong>User Answer:</strong> ${q.user_answer || 'Not answered'}
+                    </div>
+                    <div class="correct-answer">
+                      <strong>Correct Answer:</strong> ${q.correct_answer}
+                    </div>
+                  </div>
+                `;
+              });
+            } else {
+              detailHTML += '<p style="color: #888; padding: 10px;">No questions attempted in this section.</p>';
+            }
+            
+            detailHTML += '</div>'; // Close section-questions div
+          });
+        } else {
+          detailHTML = '<p style="color: #888; padding: 20px;">No quiz activity recorded yet.</p>';
+        }
+
+        detailsContent.innerHTML = detailHTML;
+
+      } catch (error) {
+        console.error('💥 Error loading details:', error);
+        detailsContent.innerHTML = `
+          <div class="error-message">
+            Failed to load detailed results. Please try again.
+          </div>
+        `;
+      }
+    }
+
+    // Show company information form
+    async function showCompanyInfo() {
+      document.getElementById('pageTitle').textContent = 'Company Information';
+      setActiveMenuItem(1);
+
+      const contentSection = document.getElementById('contentSection');
+      contentSection.innerHTML = '<div class="loading">Loading company information...</div>';
+
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const requestOptions = {
+          credentials: 'include'
+        };
+        if (authToken) {
+          requestOptions.headers = { 'X-Auth-Token': authToken };
+        }
+
+        const response = await fetch('/api/admin/company', requestOptions);
+        let companyData = {};
+
+        if (response.ok) {
+          companyData = await response.json();
+        }
+
+        contentSection.innerHTML = `
+          <div class="company-form">
+            <h3 style="color: #4a90e2; margin-top: 0;">Company Details</h3>
+            <form id="companyForm" onsubmit="saveCompanyInfo(event)">
+              <div class="form-group">
+                <label for="companyName">Company Name *</label>
+                <input type="text" id="companyName" value="${companyData.company_name || ''}" required>
+              </div>
+              <div class="form-group">
+                <label for="companyAddress">Address</label>
+                <input type="text" id="companyAddress" value="${companyData.address || ''}">
+              </div>
+              <div class="form-group">
+                <label for="companyCity">City</label>
+                <input type="text" id="companyCity" value="${companyData.city || ''}">
+              </div>
+              <div class="form-group">
+                <label for="companyState">State</label>
+                <input type="text" id="companyState" value="${companyData.state || ''}">
+              </div>
+              <div class="form-group">
+                <label for="companyZip">ZIP Code</label>
+                <input type="text" id="companyZip" value="${companyData.zip || ''}">
+              </div>
+              <div class="form-group">
+                <label for="companyPhone">Phone</label>
+                <input type="tel" id="companyPhone" value="${companyData.phone || ''}">
+              </div>
+              <div class="form-group">
+                <label for="companyEmail">Email</label>
+                <input type="email" id="companyEmail" value="${companyData.email || ''}">
+              </div>
+              <button type="submit" class="btn-primary">Save Company Information</button>
+            </form>
+            <div id="companyMessage"></div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('💥 Error loading company info:', error);
+        contentSection.innerHTML = `
+          <div class="error-message">
+            Failed to load company information. Please try again.
+          </div>
+        `;
+      }
+    }
+
+    // Save company information
+    async function saveCompanyInfo(event) {
+      event.preventDefault();
+
+      const formData = {
+        companyName: document.getElementById('companyName').value,
+        address: document.getElementById('companyAddress').value,
+        city: document.getElementById('companyCity').value,
+        state: document.getElementById('companyState').value,
+        zip: document.getElementById('companyZip').value,
+        phone: document.getElementById('companyPhone').value,
+        email: document.getElementById('companyEmail').value
+      };
+
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const response = await fetch('/api/admin/company', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': authToken
+          },
+          credentials: 'include',
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        const messageDiv = document.getElementById('companyMessage');
+        if (response.ok && result.success) {
+          messageDiv.innerHTML = '<div class="success-message">✅ Company information saved successfully!</div>';
+        } else {
+          messageDiv.innerHTML = `<div class="error-message">❌ ${result.error || 'Failed to save company information'}</div>`;
+        }
+
+        setTimeout(() => {
+          messageDiv.innerHTML = '';
+        }, 5000);
+
+      } catch (error) {
+        console.error('💥 Error saving company info:', error);
+        document.getElementById('companyMessage').innerHTML = `
+          <div class="error-message">❌ Error saving company information. Please try again.</div>
+        `;
+      }
+    }
+
+    // Show add admin form
+    function showAddAdmin() {
+      document.getElementById('pageTitle').textContent = 'Add Admin User';
+      setActiveMenuItem(2);
+
+      const contentSection = document.getElementById('contentSection');
+      contentSection.innerHTML = `
+        <div class="admin-form">
+          <h3 style="color: #4a90e2; margin-top: 0;">Create New Admin</h3>
+          <p style="color: #888; margin-bottom: 25px;">
+            Add a new administrator for your company. They will have access to manage students and company information.
+          </p>
+          <form id="addAdminForm" onsubmit="addAdminUser(event)">
+            <div class="form-group">
+              <label for="adminFirstName">First Name *</label>
+              <input type="text" id="adminFirstName" required>
+            </div>
+            <div class="form-group">
+              <label for="adminLastName">Last Name *</label>
+              <input type="text" id="adminLastName" required>
+            </div>
+            <div class="form-group">
+              <label for="adminEmail">Email *</label>
+              <input type="email" id="adminEmail" required>
+            </div>
+            <div class="form-group">
+              <label for="adminPassword">Password *</label>
+              <input type="password" id="adminPassword" required minlength="8">
+              <small style="color: #888; font-size: 12px; display: block; margin-top: 5px;">
+                Must be at least 8 characters with uppercase, lowercase, number, and special character
+              </small>
+            </div>
+            <button type="submit" class="btn-primary">Create Admin User</button>
+          </form>
+          <div id="adminMessage"></div>
+        </div>
+      `;
+    }
+
+    // Add admin user
+    async function addAdminUser(event) {
+      event.preventDefault();
+
+      const formData = {
+        firstName: document.getElementById('adminFirstName').value,
+        lastName: document.getElementById('adminLastName').value,
+        email: document.getElementById('adminEmail').value,
+        password: document.getElementById('adminPassword').value
+      };
+
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const response = await fetch('/api/admin/add-admin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Auth-Token': authToken
+          },
+          credentials: 'include',
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        const messageDiv = document.getElementById('adminMessage');
+        if (response.ok && result.success) {
+          messageDiv.innerHTML = '<div class="success-message">✅ Admin user created successfully!</div>';
+          document.getElementById('addAdminForm').reset();
+        } else {
+          messageDiv.innerHTML = `<div class="error-message">❌ ${result.error || 'Failed to create admin user'}</div>`;
+        }
+
+        setTimeout(() => {
+          messageDiv.innerHTML = '';
+        }, 5000);
+
+      } catch (error) {
+        console.error('💥 Error creating admin:', error);
+        document.getElementById('adminMessage').innerHTML = `
+          <div class="error-message">❌ Error creating admin user. Please try again.</div>
+        `;
+      }
+    }
+
+    // Set active menu item
+    function setActiveMenuItem(index) {
+      const menuItems = document.querySelectorAll('.admin-menu-item');
+      menuItems.forEach((item, i) => {
+        if (i === index) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+
+    // Toggle section visibility
+    function toggleSection(questionsId, iconId) {
+      const questionsDiv = document.getElementById(questionsId);
+      const icon = document.getElementById(iconId);
+      
+      if (questionsDiv && icon) {
+        if (questionsDiv.style.display === 'none') {
+          questionsDiv.style.display = 'block';
+          icon.textContent = '▼';
+        } else {
+          questionsDiv.style.display = 'none';
+          icon.textContent = '▶';
+        }
+      }
+    }
+
+    // Logout function
+    async function logout() {
+      try {
+        await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        localStorage.removeItem('authToken');
+        window.location.href = 'index.html';
+      } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = 'index.html';
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      const isAdmin = await checkAdminAuth();
+      if (isAdmin) {
+        showStudents();
+      }
+    });
+  </script>
+</body>
+</html>

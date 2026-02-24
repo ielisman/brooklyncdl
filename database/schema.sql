@@ -5,6 +5,10 @@
 CREATE TABLE Company (
     Id SERIAL PRIMARY KEY,
     Name VARCHAR(255) NOT NULL,
+    Address VARCHAR(255),
+    City VARCHAR(100),
+    State VARCHAR(10),
+    Zip VARCHAR(10),
     Phone VARCHAR(20),
     Email VARCHAR(255),
     Modified_By INTEGER,
@@ -46,7 +50,8 @@ CREATE TABLE User_Login (
 CREATE TABLE User_Types (
     Id SERIAL PRIMARY KEY,
     User_Id INTEGER REFERENCES Users(Id) ON DELETE CASCADE,
-    User_Type VARCHAR(50) NOT NULL CHECK (User_Type IN ('Student', 'Company Admin', 'Admin'))
+    User_Type VARCHAR(50) NOT NULL CHECK (User_Type IN ('Student', 'Company Admin', 'Admin')),
+    Company_Id INTEGER DEFAULT 0 -- 0 = can view all companies, otherwise admin can only view their company
 );
 
 -- 5. Courses Table

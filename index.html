@@ -789,12 +789,37 @@
       }
       activeCourseId = null;
       const contentArea = document.getElementById('contentArea');
+      
+      // Check if user is admin to show Admin Dashboard link
+      const adminDashboardSection = userData.userType === 'Admin' ? `
+        <div class="content-section" style="margin-bottom: 30px;">
+          <a href="admin-dashboard.html" style="
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+          " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            🛠️ Admin Dashboard
+          </a>
+          <p style="color: #888; margin-top: 10px; font-size: 14px;">
+            Manage students, company information, and admin users
+          </p>
+        </div>
+      ` : '';
+      
       contentArea.innerHTML = `
         <div class="quiz-card">
           <div class="quiz-header">
             <h2>Welcome, ${userData.firstName} ${userData.lastName}!</h2>
             <button class="btn btn-outline" onclick="logout()" style="margin-left: auto;">Logout</button>
           </div>
+          ${adminDashboardSection}
           <div class="content-section">
             <h3>Your Assigned Courses</h3>
             <div id="assignedCourses">
