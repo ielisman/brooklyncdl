@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files first (for better caching)
 COPY package*.json ./
 
-# Install dependencies for production
-RUN npm install --omit=dev
+# Install dependencies (ignore NODE_ENV during build)
+RUN npm ci --only=production || npm install --omit=dev
 
 # Copy application files (including .env)
 COPY . .

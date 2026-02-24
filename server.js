@@ -230,6 +230,29 @@ function validatePassword(password) {
   return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
 }
 
+// Get all active courses
+app.get('/api/courses', async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT id, name, description 
+      FROM courses 
+      WHERE active = true 
+      ORDER BY name
+    `);
+    
+    res.json({ 
+      success: true, 
+      courses: result.rows 
+    });
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch courses', 
+      details: error.message 
+    });
+  }
+});
+
 // User registration endpoint
 app.post('/api/signup', async (req, res) => {
   const requestId = Date.now().toString(36);
@@ -238,16 +261,71 @@ app.post('/api/signup', async (req, res) => {
   try {
     const { 
       firstName, lastName, dob, email, phone, licenseNumber, 
-      street, apartment, city, state, zipcode, password, confirmPassword 
+      street, apartment, city, state, zipcode, password, confirmPassword, courseId,
+      turnstileToken 
     } = req.body;
 
     console.log(`   📧 Email: ${email}`);
     console.log(`   👤 Name: ${firstName} ${lastName}`);
+    console.log(`   📚 Course ID: ${courseId}`);
+
+    // Verify Turnstile token if provided
+    if (turnstileToken) {
+      console.log('   🔐 Verifying Turnstile token...');
+      const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+      
+      if (!turnstileSecret) {
+        console.error('❌ Turnstile secret key not configured');
+        return res.status(500).json({ 
+          error: 'Server configuration error',
+          requestId: requestId
+        });
+      }
+
+      try {
+        const turnstileResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            secret: turnstileSecret,
+            response: turnstileToken,
+          }),
+        });
+
+        const turnstileResult = await turnstileResponse.json();
+        
+        if (!turnstileResult.success) {
+          console.error('❌ Turnstile verification failed:', turnstileResult);
+          return res.status(400).json({ 
+            error: 'Verification failed. Please try again.',
+            requestId: requestId
+          });
+        }
+        
+        console.log('   ✅ Turnstile verification successful');
+      } catch (turnstileError) {
+        console.error('❌ Turnstile verification error:', turnstileError);
+        return res.status(500).json({ 
+          error: 'Verification service error',
+          requestId: requestId
+        });
+      }
+    }
 
     // Validate required fields
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       return res.status(400).json({ 
         error: 'Missing required fields',
+        requestId: requestId
+      });
+    }
+
+    // Validate course ID
+    if (!courseId) {
+      return res.status(400).json({ 
+        error: 'Course selection is required',
         requestId: requestId
       });
     }
@@ -268,11 +346,31 @@ app.post('/api/signup', async (req, res) => {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await db.query('SELECT id FROM users WHERE email = $1', [email]);
-    if (existingUser.rows.length > 0) {
+    // Check if user already exists by email
+    const existingUserByEmail = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existingUserByEmail.rows.length > 0) {
       return res.status(409).json({ 
-        error: 'User with this email already exists',
+        error: 'An account with these credentials already exists',
+        requestId: requestId
+      });
+    }
+
+    // Check for duplicate combination of license_number, state, email, and course
+    // NOTE: In the future, add company_id to this uniqueness check when multi-company support is implemented
+    // The combination should be: license_number + state + email + course + company_id
+    const duplicateCheck = await db.query(`
+      SELECT u.id 
+      FROM users u
+      INNER JOIN user_assigned_courses uac ON u.id = uac.user_id
+      WHERE u.license_number = $1 
+        AND u.state = $2 
+        AND u.email = $3 
+        AND uac.course_id = $4
+    `, [licenseNumber, state, email, courseId]);
+    
+    if (duplicateCheck.rows.length > 0) {
+      return res.status(409).json({ 
+        error: 'An account with these credentials already exists',
         requestId: requestId
       });
     }
@@ -302,17 +400,49 @@ app.post('/api/signup', async (req, res) => {
       VALUES ($1, $2)
     `, [user.id, 'Student']);
 
+    // Assign user to the selected course
+    const courseAssignmentResult = await db.query(`
+      INSERT INTO user_assigned_courses (user_id, company_id, course_id)
+      VALUES ($1, $2, $3)
+      RETURNING id
+    `, [user.id, 0, courseId]);
+
+    const userAssignedCourseId = courseAssignmentResult.rows[0].id;
+
+    // Generate JWT token for automatic login
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name
+      },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
     console.log(`🟢 [${requestId}] USER REGISTERED SUCCESSFULLY`);
     console.log(`   👤 User ID: ${user.id}`);
+    console.log(`   📚 Course Assignment ID: ${userAssignedCourseId}`);
+
+    // Set cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
 
     res.json({
       success: true,
       message: 'Registration successful',
+      token: token,
       user: {
         id: user.id,
         email: user.email,
         firstName: user.first_name,
-        lastName: user.last_name
+        lastName: user.last_name,
+        courseId: parseInt(courseId),
+        userAssignedCourseId: userAssignedCourseId
       },
       requestId: requestId
     });
