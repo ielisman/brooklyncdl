@@ -196,36 +196,35 @@
     }
 
     .question-row {
-      display: grid;
-      grid-template-columns: 50px 1fr 1fr;
-      gap: 15px;
-      padding: 10px 12px;
-      margin: 5px 0;
-      border-radius: 6px;
-      font-size: 13px;
+      padding: 6px 10px;
+      margin: 3px 0;
+      border-radius: 4px;
+      font-size: 10px;
       border: 1px solid rgba(255, 255, 255, 0.05);
+      line-height: 1.5;
+      word-wrap: break-word;
     }
 
     .question-row.correct {
-      background: rgba(39, 174, 96, 0.2);
+      background: rgba(39, 174, 96, 0.15);
       border-color: #27ae60;
     }
 
     .question-row.incorrect {
-      background: rgba(231, 76, 60, 0.2);
+      background: rgba(231, 76, 60, 0.15);
       border-color: #e74c3c;
     }
 
-    .question-number {
-      font-weight: 600;
-      color: #4a90e2;
+    .question-content {
+      color: #e0e0e0;
+      font-size: 10px;
+      line-height: 1.6;
     }
 
-    .user-answer,
-    .correct-answer {
-      padding: 5px 10px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.05);
+    .answer-label {
+      font-weight: 600;
+      margin-left: 8px;
+      font-size: 10px;
     }
 
     .company-form,
@@ -330,6 +329,136 @@
       margin: 20px 0;
     }
 
+    .filters-toolbar {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 20px;
+      background: rgba(20, 20, 30, 0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .filter-group label {
+      font-size: 12px;
+      color: #4a90e2;
+      font-weight: 500;
+    }
+
+    .filter-group input,
+    .filter-group select {
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 14px;
+      min-width: 150px;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+      outline: none;
+      border-color: #4a90e2;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-filter {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 13px;
+      align-self: flex-end;
+    }
+
+    .btn-filter:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+    }
+
+    .btn-clear {
+      padding: 8px 16px;
+      background: rgba(231, 76, 60, 0.2);
+      border: 1px solid #e74c3c;
+      color: #e74c3c;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 13px;
+      align-self: flex-end;
+    }
+
+    .btn-clear:hover {
+      background: rgba(231, 76, 60, 0.3);
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding: 15px 20px;
+      background: rgba(20, 20, 30, 0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .pagination-info {
+      color: #e0e0e0;
+      font-size: 14px;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .pagination-btn {
+      padding: 8px 16px;
+      background: rgba(74, 144, 226, 0.2);
+      border: 1px solid rgba(74, 144, 226, 0.5);
+      color: #4a90e2;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 13px;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background: rgba(74, 144, 226, 0.3);
+      transform: scale(1.05);
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .page-input {
+      width: 60px;
+      text-align: center;
+      padding: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 13px;
+    }
+
     @media (max-width: 768px) {
       body {
         flex-direction: column;
@@ -346,6 +475,24 @@
 
       .students-table {
         overflow-x: auto;
+      }
+
+      .filters-toolbar {
+        flex-direction: column;
+      }
+
+      .filter-group {
+        width: 100%;
+      }
+
+      .filter-group input,
+      .filter-group select {
+        width: 100%;
+      }
+
+      .pagination {
+        flex-direction: column;
+        gap: 15px;
       }
 
       .question-row {
@@ -389,6 +536,20 @@
   <script>
     // Configuration
     const PASSING_PERCENTAGE = 80;
+    
+    // Pagination state
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalCount = 0;
+    const studentsPerPage = 50;
+
+    // Filter state
+    let currentFilters = {
+      search: '',
+      state: '',
+      course: ''
+    };
+    
     let adminData = {
       userId: null,
       firstName: '',
@@ -464,7 +625,8 @@
     }
 
     // Load students
-    async function showStudents() {
+    async function showStudents(page = 1) {
+      currentPage = page;
       document.getElementById('pageTitle').textContent = 'Student Management';
       setActiveMenuItem(0);
 
@@ -480,25 +642,54 @@
           requestOptions.headers = { 'X-Auth-Token': authToken };
         }
 
-        const response = await fetch('/api/admin/students', requestOptions);
+        // Build query parameters
+        const params = new URLSearchParams({
+          page: currentPage,
+          limit: studentsPerPage
+        });
+        
+        if (currentFilters.search) {
+          params.append('search', currentFilters.search);
+        }
+        if (currentFilters.state) {
+          params.append('state', currentFilters.state);
+        }
+        if (currentFilters.course) {
+          params.append('course', currentFilters.course);
+        }
+
+        const response = await fetch(`/api/admin/students?${params}`, requestOptions);
         if (!response.ok) {
           throw new Error('Failed to load students');
         }
 
-        const students = await response.json();
-        console.log('📚 Loaded students:', students);
+        const data = await response.json();
+        const students = data.students || [];
+        const pagination = data.pagination || { page: 1, totalCount: 0, totalPages: 1, limit: studentsPerPage };
+        
+        totalPages = pagination.totalPages;
+        totalCount = pagination.totalCount;
+        currentPage = pagination.page;
+
+        console.log(`📚 Loaded ${students.length} students (Page ${currentPage}/${totalPages}, Total: ${totalCount})`);
 
         if (students.length === 0) {
           contentSection.innerHTML = `
+            <div class="filters-toolbar">
+              ${renderFiltersToolbar()}
+            </div>
             <div style="text-align: center; padding: 40px; color: var(--muted);">
               <h3>No Students Found</h3>
-              <p>There are currently no students assigned to your company.</p>
+              <p>${currentFilters.search || currentFilters.state || currentFilters.course ? 'No students match your search criteria.' : 'There are currently no students assigned to your company.'}</p>
             </div>
           `;
           return;
         }
 
         let tableHTML = `
+          <div class="filters-toolbar">
+            ${renderFiltersToolbar()}
+          </div>
           <div class="students-table">
             <table>
               <thead>
@@ -554,12 +745,16 @@
               </tbody>
             </table>
           </div>
+          ${renderPagination()}
         `;
 
         contentSection.innerHTML = tableHTML;
 
         // Store student data for detail expansion
         window.studentsData = students;
+
+        // Attach filter event listeners
+        attachFilterListeners();
 
       } catch (error) {
         console.error('💥 Error loading students:', error);
@@ -568,6 +763,86 @@
             <strong>Error:</strong> Failed to load student data. Please try again.
           </div>
         `;
+      }
+    }
+
+    // Render filters toolbar
+    function renderFiltersToolbar() {
+      return `
+        <div class="filter-group">
+          <label>Search by Name</label>
+          <input type="text" id="searchInput" placeholder="First or Last Name" value="${currentFilters.search}">
+        </div>
+        <div class="filter-group">
+          <label>State</label>
+          <select id="stateFilter">
+            <option value="">All States</option>
+            <option value="NY" ${currentFilters.state === 'NY' ? 'selected' : ''}>NY</option>
+            <option value="NJ" ${currentFilters.state === 'NJ' ? 'selected' : ''}>NJ</option>
+            <option value="CT" ${currentFilters.state === 'CT' ? 'selected' : ''}>CT</option>
+            <option value="PA" ${currentFilters.state === 'PA' ? 'selected' : ''}>PA</option>
+          </select>
+        </div>
+        <button class="btn-filter" onclick="applyFilters()">Apply Filters</button>
+        <button class="btn-clear" onclick="clearFilters()">Clear</button>
+      `;
+    }
+
+    // Render pagination controls
+    function renderPagination() {
+      const startRecord = totalCount > 0 ? ((currentPage - 1) * studentsPerPage) + 1 : 0;
+      const endRecord = Math.min(currentPage * studentsPerPage, totalCount);
+      
+      return `
+        <div class="pagination">
+          <div class="pagination-info">
+            Showing ${startRecord}-${endRecord} of ${totalCount} students
+          </div>
+          <div class="pagination-controls">
+            <button class="pagination-btn" onclick="showStudents(1)" ${currentPage === 1 ? 'disabled' : ''}>First</button>
+            <button class="pagination-btn" onclick="showStudents(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+            <span style="color: #e0e0e0; font-size: 14px;">
+              Page <input type="number" class="page-input" value="${currentPage}" min="1" max="${totalPages}" onchange="goToPage(this.value)"> of ${totalPages}
+            </span>
+            <button class="pagination-btn" onclick="showStudents(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+            <button class="pagination-btn" onclick="showStudents(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Attach filter event listeners
+    function attachFilterListeners() {
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            applyFilters();
+          }
+        });
+      }
+    }
+
+    // Apply filters
+    function applyFilters() {
+      currentFilters.search = document.getElementById('searchInput')?.value || '';
+      currentFilters.state = document.getElementById('stateFilter')?.value || '';
+      currentPage = 1; // Reset to first page when filtering
+      showStudents(1);
+    }
+
+    // Clear filters
+    function clearFilters() {
+      currentFilters = { search: '', state: '', course: '' };
+      currentPage = 1;
+      showStudents(1);
+    }
+
+    // Go to specific page
+    function goToPage(page) {
+      const pageNum = parseInt(page);
+      if (pageNum >= 1 && pageNum <= totalPages) {
+        showStudents(pageNum);
       }
     }
 
@@ -643,14 +918,33 @@
                 const rowClass = isCorrect ? 'correct' : 'incorrect';
                 const icon = isCorrect ? '✅' : '❌';
 
+                // Find full choice details for user answer and correct answer
+                let userAnswerFull = q.user_answer || 'Not answered';
+                let correctAnswerFull = q.correct_answer || 'N/A';
+                
+                if (q.all_choices && q.all_choices.length > 0) {
+                  // Find user's choice
+                  const userChoice = q.all_choices.find(c => c.choice_name === q.user_answer);
+                  if (userChoice) {
+                    userAnswerFull = userChoice.choice_name + (userChoice.choice_description ? '. ' + userChoice.choice_description : '');
+                  }
+                  
+                  // Find correct choice
+                  const correctChoice = q.all_choices.find(c => c.is_correct);
+                  if (correctChoice) {
+                    correctAnswerFull = correctChoice.choice_name + (correctChoice.choice_description ? '. ' + correctChoice.choice_description : '');
+                  }
+                } else if (q.correct_answer_description) {
+                  // Fallback to direct correct answer description if all_choices not available
+                  correctAnswerFull = q.correct_answer + (q.correct_answer_description ? '. ' + q.correct_answer_description : '');
+                }
+
                 detailHTML += `
                   <div class="question-row ${rowClass}">
-                    <div class="question-number">${icon} Q${q.question_number}</div>
-                    <div class="user-answer">
-                      <strong>User Answer:</strong> ${q.user_answer || 'Not answered'}
-                    </div>
-                    <div class="correct-answer">
-                      <strong>Correct Answer:</strong> ${q.correct_answer}
+                    <div class="question-content">
+                      ${icon} <strong>Q${q.question_number}:</strong> ${q.question_name}
+                      <span class="answer-label">User:</span> ${userAnswerFull}.
+                      <span class="answer-label">Correct:</span> ${correctAnswerFull}.
                     </div>
                   </div>
                 `;

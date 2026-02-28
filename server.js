@@ -1638,23 +1638,87 @@ async function authenticateAdmin(req, res, next) {
 app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
   try {
     const companyId = req.adminCompanyId;
-    console.log(`📚 [ADMIN] Loading students for company ID: ${companyId}`);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+    const searchText = req.query.search || null;
+    const stateFilter = req.query.state || null;
+    const courseFilter = req.query.course ? parseInt(req.query.course) : null;
+    
+    console.log(`📚 [ADMIN] Loading students for company ID: ${companyId}, page: ${page}, limit: ${limit}`);
+    if (searchText) console.log(`🔍 Search: ${searchText}`);
+    if (stateFilter) console.log(`📍 State filter: ${stateFilter}`);
+    if (courseFilter) console.log(`📖 Course filter: ${courseFilter}`);
 
-    // If company_id = 0, admin can see all students, otherwise only their company
-    const companyFilter = companyId === 0 ? '' : 'WHERE u.company_id = $1';
-    const params = companyId === 0 ? [] : [companyId];
+    // Build WHERE clause with optional filters
+    const whereConditions = [];
+    const params = [];
+    let paramIndex = 1;
+
+    // Company filter
+    if (companyId !== 0) {
+      whereConditions.push(`u.company_id = $${paramIndex}`);
+      params.push(companyId);
+      paramIndex++;
+    }
+
+    // Search filter
+    if (searchText) {
+      whereConditions.push(`(u.first_name ILIKE $${paramIndex} OR u.last_name ILIKE $${paramIndex})`);
+      params.push(`%${searchText}%`);
+      paramIndex++;
+    }
+
+    // State filter
+    if (stateFilter) {
+      whereConditions.push(`u.state = $${paramIndex}`);
+      params.push(stateFilter);
+      paramIndex++;
+    }
+
+    // Course filter
+    if (courseFilter) {
+      whereConditions.push(`c.id = $${paramIndex}`);
+      params.push(courseFilter);
+      paramIndex++;
+    }
+
+    const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+    // Add limit and offset parameters
+    const limitParam = `$${paramIndex}`;
+    const offsetParam = `$${paramIndex + 1}`;
+    params.push(limit, offset);
 
     const query = `
-      SELECT DISTINCT ON (u.id)
-        u.id as user_id,
-        u.first_name,
-        u.last_name,
-        u.state,
-        u.license_number,
-        u.dob,
-        u.registration_date,
-        c.id as course_id,
-        c.name as course_name,
+      WITH student_list AS (
+        SELECT DISTINCT 
+          u.id as user_id,
+          u.company_id,
+          u.first_name,
+          u.last_name,
+          u.state,
+          u.license_number,
+          u.dob,
+          u.registration_date,
+          uac.id as user_assigned_course_id,
+          c.id as course_id,
+          c.name as course_name
+        FROM users u
+        INNER JOIN user_assigned_courses uac ON u.id = uac.user_id AND uac.active = true
+        INNER JOIN courses c ON uac.course_id = c.id AND c.active = true
+        ${whereClause}
+      )
+      SELECT 
+        sl.user_id,
+        sl.first_name,
+        sl.last_name,
+        sl.state,
+        sl.license_number,
+        sl.dob,
+        sl.registration_date,
+        sl.course_id,
+        sl.course_name,
         uqpt_latest.last_quiz_date,
         r.submitted_on,
         COALESCE(r.total_score, uqpt_sum.total_score, 0) as total_score,
@@ -1663,19 +1727,18 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
           CASE 
             WHEN uqpt_sum.total_questions > 0 THEN ROUND((uqpt_sum.total_score::numeric / uqpt_sum.total_questions::numeric) * 100, 2)
             ELSE 0 
-          END, 0) as score_percentage
-      FROM users u
-      LEFT JOIN user_assigned_courses uac ON u.id = uac.user_id
-      LEFT JOIN courses c ON uac.course_id = c.id
-      LEFT JOIN (
-        SELECT user_id, MAX(modified_on) as last_quiz_date
+          END, 0) as score_percentage,
+        COUNT(*) OVER() as total_count
+      FROM student_list sl
+      LEFT JOIN LATERAL (
+        SELECT MAX(modified_on) as last_quiz_date
         FROM user_quiz_progress_tracker
-        GROUP BY user_id
-      ) uqpt_latest ON u.id = uqpt_latest.user_id
+        WHERE user_id = sl.user_id
+      ) uqpt_latest ON true
       LEFT JOIN LATERAL (
         SELECT submitted_on, total_score, total_possible, score_percentage
         FROM results
-        WHERE user_assigned_course_id = uac.id
+        WHERE user_assigned_course_id = sl.user_assigned_course_id
         ORDER BY submitted_on DESC
         LIMIT 1
       ) r ON true
@@ -1684,17 +1747,28 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
           SUM(uqpt.score) as total_score,
           SUM(uqpt.total_questions) as total_questions
         FROM user_quiz_progress_tracker uqpt
-        JOIN quizes q ON uqpt.quiz_id = q.id
-        WHERE uqpt.user_id = u.id AND q.course_id = c.id
+        INNER JOIN quizes q ON uqpt.quiz_id = q.id
+        WHERE uqpt.user_id = sl.user_id AND q.course_id = sl.course_id AND q.active = true
       ) uqpt_sum ON true
-      LEFT JOIN user_types ut ON u.id = ut.user_id
-      ${companyFilter}
-      ORDER BY u.id, u.registration_date DESC
+      ORDER BY sl.registration_date DESC, sl.user_id
+      LIMIT ${limitParam} OFFSET ${offsetParam}
     `;
 
     const result = await db.query(query, params);
-    console.log(`✅ [ADMIN] Found ${result.rows.length} students`);
-    res.json(result.rows);
+    const totalCount = result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0;
+    const totalPages = Math.ceil(totalCount / limit);
+    
+    console.log(`✅ [ADMIN] Found ${result.rows.length} students (Total: ${totalCount}, Page: ${page}/${totalPages})`);
+    
+    res.json({
+      students: result.rows,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error('💥 Error loading students:', error);
     res.status(500).json({ error: 'Server error loading students' });
@@ -1721,32 +1795,17 @@ app.get('/api/admin/student-details/:userId', authenticateAdmin, async (req, res
       }
     }
 
-    // Get user's quiz progress data with answers
-    const progressQuery = `
-      SELECT uqpt.quiz_id, uqpt.user_answers, cs.id as section_id
-      FROM user_quiz_progress_tracker uqpt
-      JOIN quizes q ON uqpt.quiz_id = q.id
-      JOIN course_sections cs ON q.section_id = cs.id
-      WHERE uqpt.user_id = $1 AND cs.course_id = $2
-    `;
-    const progressResult = await db.query(progressQuery, [userId, courseId]);
-    
-    // Build a map of quiz_id -> user_answers
-    const userAnswersMap = {};
-    progressResult.rows.forEach(row => {
-      let answers = row.user_answers;
-      if (typeof answers === 'string') {
-        try {
-          answers = JSON.parse(answers);
-        } catch (e) {
-          answers = {};
-        }
-      }
-      userAnswersMap[row.quiz_id] = answers || {};
-    });
-
-    // Get sections and questions with correct answers
+    // Optimized query with full question and answer details
     const query = `
+      WITH user_progress AS (
+        SELECT 
+          uqpt.quiz_id,
+          uqpt.user_answers
+        FROM user_quiz_progress_tracker uqpt
+        INNER JOIN quizes q ON uqpt.quiz_id = q.id
+        INNER JOIN course_sections cs ON q.section_id = cs.id
+        WHERE uqpt.user_id = $1 AND cs.course_id = $2 AND cs.active = true
+      )
       SELECT 
         cs.id as section_id,
         cs.section_name,
@@ -1755,16 +1814,30 @@ app.get('/api/admin/student-details/:userId', authenticateAdmin, async (req, res
         qq.id as question_id,
         qq.question_name,
         qmc_correct.choice_name as correct_answer,
-        ROW_NUMBER() OVER (PARTITION BY q.id ORDER BY qq.id) - 1 as question_index
+        qmc_correct.choice_description as correct_answer_description,
+        ROW_NUMBER() OVER (PARTITION BY q.id ORDER BY qq.id) - 1 as question_index,
+        up.user_answers,
+        jsonb_agg(
+          jsonb_build_object(
+            'choice_name', qmc.choice_name,
+            'choice_description', qmc.choice_description,
+            'is_correct', qmc.is_correct
+          ) ORDER BY qmc.id
+        ) FILTER (WHERE qmc.id IS NOT NULL) as all_choices
       FROM course_sections cs
-      JOIN quizes q ON cs.id = q.section_id
-      JOIN quiz_questions qq ON q.id = qq.quiz_id
-      LEFT JOIN quiz_multiple_choices qmc_correct ON qq.id = qmc_correct.question_id AND qmc_correct.is_correct = true
-      WHERE cs.course_id = $1 AND cs.active = true
+      INNER JOIN quizes q ON cs.id = q.section_id AND q.active = true
+      INNER JOIN quiz_questions qq ON q.id = qq.quiz_id AND qq.active = true
+      LEFT JOIN quiz_multiple_choices qmc_correct ON qq.id = qmc_correct.question_id 
+        AND qmc_correct.is_correct = true 
+        AND qmc_correct.active = true
+      LEFT JOIN quiz_multiple_choices qmc ON qq.id = qmc.question_id AND qmc.active = true
+      LEFT JOIN user_progress up ON q.id = up.quiz_id
+      WHERE cs.course_id = $2 AND cs.active = true
+      GROUP BY cs.id, cs.section_name, cs.section_number, q.id, qq.id, qq.question_name, qmc_correct.choice_name, qmc_correct.choice_description, up.user_answers
       ORDER BY cs.section_number, qq.id
     `;
 
-    const result = await db.query(query, [courseId]);
+    const result = await db.query(query, [userId, courseId]);
 
     // Group by sections and match user answers
     const sections = {};
@@ -1780,8 +1853,18 @@ app.get('/api/admin/student-details/:userId', authenticateAdmin, async (req, res
         };
       }
 
-      // Get user's answer for this question from the JSON
-      const quizAnswers = userAnswersMap[row.quiz_id] || {};
+      // Parse user answers
+      let quizAnswers = row.user_answers;
+      if (typeof quizAnswers === 'string') {
+        try {
+          quizAnswers = JSON.parse(quizAnswers);
+        } catch (e) {
+          quizAnswers = {};
+        }
+      }
+      quizAnswers = quizAnswers || {};
+
+      // Get user's answer for this question
       const userAnswerById = quizAnswers[row.question_id?.toString()];
       const userAnswerByIndex = quizAnswers[row.question_index?.toString()];
       const userAnswer = userAnswerById || userAnswerByIndex || 'Not answered';
@@ -1792,8 +1875,10 @@ app.get('/api/admin/student-details/:userId', authenticateAdmin, async (req, res
         question_number: sections[row.section_id].questions.length + 1,
         question_name: row.question_name,
         correct_answer: row.correct_answer,
+        correct_answer_description: row.correct_answer_description,
         user_answer: userAnswer,
-        is_correct: isCorrect
+        is_correct: isCorrect,
+        all_choices: row.all_choices || []
       });
 
       sections[row.section_id].total_questions++;
@@ -1803,7 +1888,7 @@ app.get('/api/admin/student-details/:userId', authenticateAdmin, async (req, res
     });
 
     const sectionsArray = Object.values(sections);
-    console.log(`✅ [ADMIN] Loaded ${sectionsArray.length} sections`);
+    console.log(`✅ [ADMIN] Loaded ${sectionsArray.length} sections with optimized query`);
 
     res.json({ sections: sectionsArray });
   } catch (error) {
