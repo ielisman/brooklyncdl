@@ -233,7 +233,7 @@
     // No need for client-side API keys anymore!
 
     // Configuration Constants
-    const PASSING_PERCENTAGE = 80; // Minimum percentage required to pass
+    const PASSING_PERCENTAGE = 5; // Minimum percentage required to pass
 
     // Date formatting functions
     function formatDateOfBirth(dateString) {
@@ -1244,8 +1244,8 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
         // Save results to file
         saveResults(emailBodyHtml, profile.license_number, profile.state, profile.first_name, profile.last_name);
         
-        // Submit final results to database
-        submitFinalResultsToDatabase(activeCourseId || 1, totalCorrect, totalPossible, score);
+        // Submit final results to database (await so DB write completes before showing modal)
+        await submitFinalResultsToDatabase(activeCourseId || 1, totalCorrect, totalPossible, score);
         
         // Show confirmation to user
         showEmailConfirmation(emailBodyHtml);
@@ -1391,7 +1391,7 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
             <!-- Footer -->
             <div style="padding: 20px 30px; background: #f8f9fa; border-radius: 0 0 16px 16px; 
                         text-align: center; border-top: 1px solid #e9ecef;">
-              <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove()" 
+              <button onclick="this.parentElement.parentElement.parentElement.parentElement.remove(); showHome();" 
                       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                              color: white; border: none; border-radius: 25px; padding: 12px 30px; 
                              font-size: 16px; font-weight: 500; cursor: pointer; 

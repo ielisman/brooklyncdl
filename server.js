@@ -379,12 +379,12 @@ app.post('/api/signup', async (req, res) => {
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Insert user
+    // Insert user (company_id stored only in user_assigned_courses)
     const userResult = await db.query(`
-      INSERT INTO users (company_id, first_name, last_name, dob, email, phone, license_number, street, apartment, city, state, zipcode)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO users (first_name, last_name, dob, email, phone, license_number, street, apartment, city, state, zipcode)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING id, email, first_name, last_name
-    `, [0, firstName, lastName, dob || null, email, phone || null, licenseNumber || null, street || null, apartment || null, city || null, state || null, zipcode || null]);
+    `, [firstName, lastName, dob || null, email, phone || null, licenseNumber || null, street || null, apartment || null, city || null, state || null, zipcode || null]);
 
     const user = userResult.rows[0];
 
@@ -476,7 +476,7 @@ app.post('/api/login', async (req, res) => {
 
     // Get user and login info
     const userResult = await db.query(`
-            SELECT u.id, u.first_name, u.last_name, u.email, u.company_id,
+            SELECT u.id, u.first_name, u.last_name, u.email,
               u.registration_date,
               ul.password_hash, ul.number_of_login_attempts,
               ut.user_type
@@ -1655,9 +1655,9 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
     const params = [];
     let paramIndex = 1;
 
-    // Company filter
+    // Company filter - use user_assigned_courses.company_id
     if (companyId !== 0) {
-      whereConditions.push(`u.company_id = $${paramIndex}`);
+      whereConditions.push(`uac.company_id = $${paramIndex}`);
       params.push(companyId);
       paramIndex++;
     }
@@ -1694,7 +1694,6 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
       WITH student_list AS (
         SELECT DISTINCT 
           u.id as user_id,
-          u.company_id,
           u.first_name,
           u.last_name,
           u.state,
@@ -1702,6 +1701,7 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
           u.dob,
           u.registration_date,
           uac.id as user_assigned_course_id,
+          uac.company_id,
           c.id as course_id,
           c.name as course_name
         FROM users u
@@ -1719,6 +1719,8 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
         sl.registration_date,
         sl.course_id,
         sl.course_name,
+        sl.user_assigned_course_id,
+        sl.company_id,
         uqpt_latest.last_quiz_date,
         r.submitted_on,
         COALESCE(r.total_score, uqpt_sum.total_score, 0) as total_score,
@@ -1731,9 +1733,10 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
         COUNT(*) OVER() as total_count
       FROM student_list sl
       LEFT JOIN LATERAL (
-        SELECT MAX(modified_on) as last_quiz_date
-        FROM user_quiz_progress_tracker
-        WHERE user_id = sl.user_id
+        SELECT MAX(uqpt.modified_on) as last_quiz_date
+        FROM user_quiz_progress_tracker uqpt
+        INNER JOIN quizes q ON uqpt.quiz_id = q.id
+        WHERE uqpt.user_id = sl.user_id AND q.course_id = sl.course_id
       ) uqpt_latest ON true
       LEFT JOIN LATERAL (
         SELECT submitted_on, total_score, total_possible, score_percentage
@@ -1750,7 +1753,7 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
         INNER JOIN quizes q ON uqpt.quiz_id = q.id
         WHERE uqpt.user_id = sl.user_id AND q.course_id = sl.course_id AND q.active = true
       ) uqpt_sum ON true
-      ORDER BY sl.registration_date DESC, sl.user_id
+      ORDER BY sl.registration_date DESC, sl.user_id, sl.course_id
       LIMIT ${limitParam} OFFSET ${offsetParam}
     `;
 
@@ -1787,8 +1790,10 @@ app.get('/api/admin/student-details/:userId', authenticateAdmin, async (req, res
     // Verify admin has access to this student
     if (companyId !== 0) {
       const accessCheck = await db.query(
-        `SELECT u.id FROM users u WHERE u.id = $1 AND u.company_id = $2`,
-        [userId, companyId]
+        `SELECT u.id FROM users u 
+         INNER JOIN user_assigned_courses uac ON u.id = uac.user_id
+         WHERE u.id = $1 AND uac.course_id = $2 AND uac.company_id = $3`,
+        [userId, courseId, companyId]
       );
       if (accessCheck.rows.length === 0) {
         return res.status(403).json({ error: 'Access denied to this student' });
@@ -1997,12 +2002,12 @@ app.post('/api/admin/add-admin', authenticateAdmin, async (req, res) => {
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
 
-    // Insert new user
+    // Insert new user (company_id stored in user_types for admins)
     const userResult = await db.query(
-      `INSERT INTO users (company_id, first_name, last_name, email, registration_date, active)
-       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, true)
+      `INSERT INTO users (first_name, last_name, email, registration_date, active)
+       VALUES ($1, $2, $3, CURRENT_TIMESTAMP, true)
        RETURNING id`,
-      [companyId, firstName, lastName, email]
+      [firstName, lastName, email]
     );
 
     const newUserId = userResult.rows[0].id;
