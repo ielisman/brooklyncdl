@@ -459,6 +459,115 @@
       font-size: 13px;
     }
 
+    /* Sortable column headers */
+    .students-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 20px;
+      white-space: nowrap;
+    }
+
+    .students-table th.sortable:hover {
+      background: rgba(74, 144, 226, 0.25);
+    }
+
+    .sort-icon {
+      font-size: 10px;
+      margin-left: 4px;
+      opacity: 0.4;
+    }
+
+    .sort-icon.active {
+      opacity: 1;
+      color: #fff;
+    }
+
+    /* Column filter row */
+    .students-table .filter-row th {
+      padding: 6px 4px;
+      background: rgba(74, 144, 226, 0.08);
+      border-bottom: 2px solid rgba(74, 144, 226, 0.3);
+    }
+
+    .col-filter {
+      width: 100%;
+      padding: 4px 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-size: 11px;
+      box-sizing: border-box;
+    }
+
+    .col-filter:focus {
+      outline: none;
+      border-color: #4a90e2;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .col-filter::placeholder {
+      color: rgba(224, 224, 224, 0.35);
+    }
+
+    /* Column config */
+    .col-config-btn {
+      padding: 6px 14px;
+      background: rgba(74, 144, 226, 0.15);
+      border: 1px solid rgba(74, 144, 226, 0.4);
+      color: #4a90e2;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .col-config-btn:hover {
+      background: rgba(74, 144, 226, 0.25);
+    }
+
+    .col-config-panel {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      margin-top: 6px;
+      background: rgba(20, 20, 35, 0.98);
+      border: 1px solid rgba(74, 144, 226, 0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      z-index: 100;
+      min-width: 180px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .col-config-panel.open {
+      display: block;
+    }
+    .col-config-panel label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      font-size: 13px;
+      color: #e0e0e0;
+      cursor: pointer;
+      user-select: none;
+    }
+    .col-config-panel label:hover {
+      color: #4a90e2;
+    }
+    .col-config-panel input[type="checkbox"] {
+      accent-color: #4a90e2;
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+    .col-config-wrapper {
+      position: relative;
+      align-self: flex-end;
+    }
+
     @media (max-width: 768px) {
       body {
         flex-direction: column;
@@ -546,9 +655,48 @@
     // Filter state
     let currentFilters = {
       search: '',
-      state: '',
       course: ''
     };
+
+    // Column definitions — each column has: key, label, sortKey, filterKey (null = no filter), getValue fn, visible
+    const ALL_COLUMNS = [
+      { key: 'name',       label: 'Name',       sortKey: 'name',       filterKey: 'filterName',    placeholder: 'Filter\u2026',  getValue: s => `<strong>${s.first_name} ${s.last_name}</strong>` },
+      { key: 'state',      label: 'State',      sortKey: 'state',      filterKey: 'filterState',   placeholder: 'Filter\u2026',  getValue: s => s.state || 'N/A' },
+      { key: 'license',    label: 'License #',  sortKey: 'license',    filterKey: 'filterLicense', placeholder: 'Filter\u2026',  getValue: s => s.license_number || 'N/A' },
+      { key: 'dob',        label: 'DOB',        sortKey: 'dob',        filterKey: 'filterDob',     placeholder: 'MM/DD/YY\u2026', getValue: s => formatDateOfBirth(s.dob) },
+      { key: 'phone',      label: 'Phone',      sortKey: 'phone',      filterKey: 'filterPhone',   placeholder: 'Filter\u2026',  getValue: s => s.phone || 'N/A' },
+      { key: 'email',      label: 'Email',      sortKey: 'email',      filterKey: 'filterEmail',   placeholder: 'Filter\u2026',  getValue: s => s.email || 'N/A' },
+      { key: 'course',     label: 'Course',     sortKey: 'course',     filterKey: 'filterCourse',  placeholder: 'Filter\u2026',  getValue: s => s.course_name || 'N/A' },
+      { key: 'registered', label: 'Registered', sortKey: 'registered', filterKey: null,            placeholder: '',              getValue: s => formatDateTime(s.registration_date) },
+      { key: 'lastQuiz',   label: 'Last Quiz',  sortKey: 'lastQuiz',   filterKey: null,            placeholder: '',              getValue: s => formatDateTime(s.last_quiz_date) },
+      { key: 'submitted',  label: 'Submitted',  sortKey: 'submitted',  filterKey: null,            placeholder: '',              getValue: s => formatDateTime(s.submitted_on) },
+      { key: 'score',      label: 'Score',      sortKey: 'score',      filterKey: null,            placeholder: '',              getValue: null /* special rendering */ }
+    ];
+
+    // Default visible columns
+    const DEFAULT_VISIBLE = ['name','state','license','dob','course','registered','lastQuiz','submitted','score'];
+
+    // Load column visibility from localStorage or use defaults
+    function loadColumnVisibility() {
+      try {
+        const saved = localStorage.getItem('adminColVisibility');
+        if (saved) return JSON.parse(saved);
+      } catch(e) {}
+      return [...DEFAULT_VISIBLE];
+    }
+    function saveColumnVisibility(keys) {
+      localStorage.setItem('adminColVisibility', JSON.stringify(keys));
+    }
+    let visibleColumns = loadColumnVisibility();
+    function getVisibleCols() {
+      return ALL_COLUMNS.filter(c => visibleColumns.includes(c.key));
+    }
+
+    // Column filter state (keyed by filterKey param name)
+    let columnFilters = {};
+
+    // Sort state
+    let currentSort = { column: null, order: 'desc' };
     
     let adminData = {
       userId: null,
@@ -634,8 +782,24 @@
       document.getElementById('pageTitle').textContent = 'Student Management';
       setActiveMenuItem(0);
 
+      // Save column filter focus before DOM changes
+      saveColumnFilterFocus();
+
       const contentSection = document.getElementById('contentSection');
-      contentSection.innerHTML = '<div class="loading">Loading student data...</div>';
+
+      // Render filters toolbar only once; reuse it on subsequent calls
+      if (!document.getElementById('filtersToolbar')) {
+        contentSection.innerHTML = `
+          <div class="filters-toolbar" id="filtersToolbar">
+            ${renderFiltersToolbar()}
+          </div>
+          <div id="studentsTableArea">
+            <div class="loading">Loading student data...</div>
+          </div>
+        `;
+        attachFilterListeners();
+      }
+      // Don't show loading spinner on filter/sort/page changes to avoid flicker
 
       try {
         const authToken = localStorage.getItem('authToken');
@@ -655,11 +819,19 @@
         if (currentFilters.search) {
           params.append('search', currentFilters.search);
         }
-        if (currentFilters.state) {
-          params.append('state', currentFilters.state);
-        }
         if (currentFilters.course) {
           params.append('course', currentFilters.course);
+        }
+
+        // Column-level filters
+        for (const [paramName, val] of Object.entries(columnFilters)) {
+          if (val) params.append(paramName, val);
+        }
+
+        // Sort
+        if (currentSort.column) {
+          params.append('sortBy', currentSort.column);
+          params.append('sortOrder', currentSort.order);
         }
 
         const response = await fetch(`/api/admin/students?${params}`, requestOptions);
@@ -677,41 +849,48 @@
 
         console.log(`📚 Loaded ${students.length} students (Page ${currentPage}/${totalPages}, Total: ${totalCount})`);
 
-        if (students.length === 0) {
-          contentSection.innerHTML = `
-            <div class="filters-toolbar">
-              ${renderFiltersToolbar()}
-            </div>
-            <div style="text-align: center; padding: 40px; color: var(--muted);">
-              <h3>No Students Found</h3>
-              <p>${currentFilters.search || currentFilters.state || currentFilters.course ? 'No students match your search criteria.' : 'There are currently no students assigned to your company.'}</p>
-            </div>
-          `;
-          return;
-        }
+        const sortIcon = (col) => {
+          if (currentSort.column !== col) return '<span class="sort-icon">\u21c5</span>';
+          return currentSort.order === 'asc'
+            ? '<span class="sort-icon active">\u25b2</span>'
+            : '<span class="sort-icon active">\u25bc</span>';
+        };
+
+        const esc = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        const cols = getVisibleCols();
+        const totalCols = cols.length + 1; // +1 for expand icon column
 
         let tableHTML = `
-          <div class="filters-toolbar">
-            ${renderFiltersToolbar()}
-          </div>
           <div class="students-table">
             <table>
               <thead>
                 <tr>
                   <th style="width: 40px;"></th>
-                  <th>Name</th>
-                  <th>State</th>
-                  <th>License #</th>
-                  <th>DOB</th>
-                  <th>Course</th>
-                  <th>Registered</th>
-                  <th>Last Quiz</th>
-                  <th>Submitted</th>
-                  <th>Score</th>
+                  ${cols.map(c => `<th class="sortable" onclick="sortByColumn('${c.sortKey}')">${c.label} ${sortIcon(c.sortKey)}</th>`).join('\n                  ')}
+                </tr>
+                <tr class="filter-row">
+                  <th></th>
+                  ${cols.map(c => {
+                    if (!c.filterKey) return '<th></th>';
+                    const val = esc(columnFilters[c.filterKey] || '');
+                    return `<th><input type="text" class="col-filter" id="colFilter_${c.filterKey}" placeholder="${c.placeholder}" value="${val}" data-param="${c.filterKey}"></th>`;
+                  }).join('\n                  ')}
                 </tr>
               </thead>
               <tbody>
         `;
+
+        if (students.length === 0) {
+          const hasFilters = currentFilters.search || currentFilters.course ||
+            Object.values(columnFilters).some(v => v);
+          tableHTML += `
+                <tr>
+                  <td colspan="${totalCols}" style="text-align: center; padding: 30px; color: #888;">
+                    ${hasFilters ? 'No students match your filter criteria.' : 'There are currently no students assigned to your company.'}
+                  </td>
+                </tr>
+          `;
+        }
 
         students.forEach((student, index) => {
           const score = student.score_percentage || 0;
@@ -720,23 +899,14 @@
 
           tableHTML += `
             <tr onclick="toggleDetails(${index})">
-              <td>
-                <span class="expand-icon" id="icon-${index}">+</span>
-              </td>
-              <td><strong>${student.first_name} ${student.last_name}</strong></td>
-              <td>${student.state || 'N/A'}</td>
-              <td>${student.license_number || 'N/A'}</td>
-              <td>${formatDateOfBirth(student.dob)}</td>
-              <td>${student.course_name || 'N/A'}</td>
-              <td>${formatDateTime(student.registration_date)}</td>
-              <td>${formatDateTime(student.last_quiz_date)}</td>
-              <td>${formatDateTime(student.submitted_on)}</td>
-              <td>
-                <span class="score-badge ${scoreClass}">${scoreText}</span>
-              </td>
+              <td><span class="expand-icon" id="icon-${index}">+</span></td>
+              ${cols.map(c => {
+                if (c.key === 'score') return `<td><span class="score-badge ${scoreClass}">${scoreText}</span></td>`;
+                return `<td>${c.getValue(student)}</td>`;
+              }).join('\n              ')}
             </tr>
             <tr class="details-row" id="details-${index}">
-              <td colspan="10">
+              <td colspan="${totalCols}">
                 <div class="details-content">
                   <div class="loading">Loading detailed results...</div>
                 </div>
@@ -749,20 +919,21 @@
               </tbody>
             </table>
           </div>
-          ${renderPagination()}
+          ${students.length > 0 ? renderPagination() : ''}
         `;
 
-        contentSection.innerHTML = tableHTML;
+        document.getElementById('studentsTableArea').innerHTML = tableHTML;
 
         // Store student data for detail expansion
         window.studentsData = students;
 
-        // Attach filter event listeners
-        attachFilterListeners();
+        // Attach column filter listeners and restore focus
+        attachColumnFilterListeners();
+        restoreColumnFilterFocus();
 
       } catch (error) {
         console.error('💥 Error loading students:', error);
-        contentSection.innerHTML = `
+        (document.getElementById('studentsTableArea') || contentSection).innerHTML = `
           <div class="error-message">
             <strong>Error:</strong> Failed to load student data. Please try again.
           </div>
@@ -772,23 +943,23 @@
 
     // Render filters toolbar
     function renderFiltersToolbar() {
+      const colCheckboxes = ALL_COLUMNS.map(c => {
+        const checked = visibleColumns.includes(c.key) ? 'checked' : '';
+        return `<label><input type="checkbox" value="${c.key}" ${checked} onchange="toggleColumnVisibility(this)"> ${c.label}</label>`;
+      }).join('');
+
       return `
         <div class="filter-group">
-          <label>Search by Name</label>
-          <input type="text" id="searchInput" placeholder="First or Last Name" value="${currentFilters.search}">
+          <label>Search by Name or License #</label>
+          <input type="text" id="searchInput" placeholder="Name or License Number" value="${currentFilters.search}">
         </div>
-        <div class="filter-group">
-          <label>State</label>
-          <select id="stateFilter">
-            <option value="">All States</option>
-            <option value="NY" ${currentFilters.state === 'NY' ? 'selected' : ''}>NY</option>
-            <option value="NJ" ${currentFilters.state === 'NJ' ? 'selected' : ''}>NJ</option>
-            <option value="CT" ${currentFilters.state === 'CT' ? 'selected' : ''}>CT</option>
-            <option value="PA" ${currentFilters.state === 'PA' ? 'selected' : ''}>PA</option>
-          </select>
-        </div>
-        <button class="btn-filter" onclick="applyFilters()">Apply Filters</button>
         <button class="btn-clear" onclick="clearFilters()">Clear</button>
+        <div class="col-config-wrapper">
+          <button class="col-config-btn" onclick="toggleColConfigPanel(event)">⚙ Columns</button>
+          <div class="col-config-panel" id="colConfigPanel">
+            ${colCheckboxes}
+          </div>
+        </div>
       `;
     }
 
@@ -816,30 +987,133 @@
     }
 
     // Attach filter event listeners
+    let searchDebounceTimer = null;
     function attachFilterListeners() {
       const searchInput = document.getElementById('searchInput');
       if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          clearTimeout(searchDebounceTimer);
+          searchDebounceTimer = setTimeout(() => {
+            applyFilters();
+          }, 300);
+        });
         searchInput.addEventListener('keypress', (e) => {
           if (e.key === 'Enter') {
+            clearTimeout(searchDebounceTimer);
             applyFilters();
           }
         });
       }
+      // Close column config panel on outside click
+      document.addEventListener('click', (e) => {
+        const panel = document.getElementById('colConfigPanel');
+        if (panel && panel.classList.contains('open') && !e.target.closest('.col-config-wrapper')) {
+          panel.classList.remove('open');
+        }
+      });
     }
 
     // Apply filters
     function applyFilters() {
       currentFilters.search = document.getElementById('searchInput')?.value || '';
-      currentFilters.state = document.getElementById('stateFilter')?.value || '';
-      currentPage = 1; // Reset to first page when filtering
+      currentPage = 1;
       showStudents(1);
+    }
+
+    // Sort by column
+    function sortByColumn(col) {
+      if (currentSort.column === col) {
+        currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort.column = col;
+        currentSort.order = 'asc';
+      }
+      showStudents(currentPage);
+    }
+
+    // Attach column filter listeners (called after table renders)
+    let colFilterTimer = null;
+    function attachColumnFilterListeners() {
+      document.querySelectorAll('.col-filter').forEach(input => {
+        // Prevent row toggle when clicking inside a filter
+        input.addEventListener('click', e => e.stopPropagation());
+        input.addEventListener('input', () => {
+          clearTimeout(colFilterTimer);
+          colFilterTimer = setTimeout(() => {
+            syncColumnFilters();
+            currentPage = 1;
+            showStudents(1);
+          }, 400);
+        });
+        input.addEventListener('keypress', e => {
+          if (e.key === 'Enter') {
+            clearTimeout(colFilterTimer);
+            syncColumnFilters();
+            currentPage = 1;
+            showStudents(1);
+          }
+        });
+      });
+    }
+
+    // Read current column filter DOM values into state
+    function syncColumnFilters() {
+      columnFilters = {};
+      document.querySelectorAll('.col-filter').forEach(input => {
+        const param = input.dataset.param;
+        if (param && input.value) columnFilters[param] = input.value;
+      });
+    }
+
+    // Save/restore focus for column filter inputs across table re-renders
+    let _focusedColFilter = null;
+    function saveColumnFilterFocus() {
+      const el = document.activeElement;
+      if (el && el.classList.contains('col-filter')) {
+        _focusedColFilter = { id: el.id, pos: el.selectionStart };
+      } else {
+        _focusedColFilter = null;
+      }
+    }
+    function restoreColumnFilterFocus() {
+      if (_focusedColFilter) {
+        const el = document.getElementById(_focusedColFilter.id);
+        if (el) {
+          el.focus();
+          const pos = _focusedColFilter.pos;
+          if (pos != null) el.setSelectionRange(pos, pos);
+        }
+        _focusedColFilter = null;
+      }
     }
 
     // Clear filters
     function clearFilters() {
-      currentFilters = { search: '', state: '', course: '' };
+      currentFilters = { search: '', course: '' };
+      columnFilters = {};
+      currentSort = { column: null, order: 'desc' };
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.value = '';
       currentPage = 1;
       showStudents(1);
+    }
+
+    // Column config panel toggle
+    function toggleColConfigPanel(e) {
+      e.stopPropagation();
+      document.getElementById('colConfigPanel')?.classList.toggle('open');
+    }
+    function toggleColumnVisibility(checkbox) {
+      const key = checkbox.value;
+      if (checkbox.checked) {
+        if (!visibleColumns.includes(key)) visibleColumns.push(key);
+      } else {
+        visibleColumns = visibleColumns.filter(k => k !== key);
+      }
+      // Maintain original column order
+      visibleColumns.sort((a, b) => ALL_COLUMNS.findIndex(c => c.key === a) - ALL_COLUMNS.findIndex(c => c.key === b));
+      saveColumnVisibility(visibleColumns);
+      showStudents(currentPage);
     }
 
     // Go to specific page
@@ -1253,18 +1527,18 @@
       <h2>&#x2696;&#xFE0F; Disclaimer</h2>
       <p>This platform is provided for educational and training purposes only. The materials, quizzes, and assessments are designed to help prepare students for Entry-Level Driver Training (ELDT) theory requirements and do not guarantee passage of any official examination, state licensing test, or CDL certification process.</p>
       <h3>Content Accuracy</h3>
-      <p>While every effort is made to ensure the accuracy and currency of the training content, Sea Star Commercial Driving School and Brooklyn CDL Inc. make no warranties, express or implied, regarding the completeness, accuracy, reliability, or suitability of the information provided. Federal and state regulations may change; always consult the most current FMCSA guidelines and your state&rsquo;s licensing authority.</p>
+      <p>While every effort is made to ensure the accuracy and currency of the training content, Sea Star Commercial Driving School Inc. and Brooklyn CDL Inc. make no warranties, express or implied, regarding the completeness, accuracy, reliability, or suitability of the information provided. Federal and state regulations may change; always consult the most current FMCSA guidelines and your state&rsquo;s licensing authority.</p>
       <h3>No Liability</h3>
-      <p>Neither Sea Star Commercial Driving School nor Brooklyn CDL Inc. shall be liable for any direct, indirect, incidental, or consequential damages arising from the use of, or inability to use, this platform or its content.</p>
+      <p>Neither Sea Star Commercial Driving School Inc. nor Brooklyn CDL Inc. shall be liable for any direct, indirect, incidental, or consequential damages arising from the use of, or inability to use, this platform or its content.</p>
       <h3>Personal Data</h3>
       <p>Information submitted through this platform is used solely for training administration and record-keeping purposes in accordance with applicable privacy laws. For questions regarding your training requirements, please contact your instructor or administrator.</p>
-      <p class="disclaimer-footer-note">&copy; 2026. Content is provided by Sea Star Commercial Driving School. Learning Platform is provided by Brooklyn CDL Inc.</p>
+      <p class="disclaimer-footer-note">&copy; 2026. Content is provided by Sea Star Commercial Driving School Inc. Learning Platform is provided by Brooklyn CDL Inc.</p>
     </div>
   </div>
 
   <!-- Site Footer -->
   <footer class="site-footer">
-    &copy; 2026. Content is provided by Sea Star Commercial Driving School. Learning Platform is provided by Brooklyn CDL Inc. &nbsp;|&nbsp;
+    &copy; 2026. Content is provided by Sea Star Commercial Driving School Inc. Learning Platform is provided by Brooklyn CDL Inc. &nbsp;|&nbsp;
     <a href="#" onclick="showDisclaimer(); return false;">Disclaimer</a>
   </footer>
 

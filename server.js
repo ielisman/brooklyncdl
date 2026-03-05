@@ -1984,11 +1984,39 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
     const searchText = req.query.search || null;
     const stateFilter = req.query.state || null;
     const courseFilter = req.query.course ? parseInt(req.query.course) : null;
+
+    // Column-level filters
+    const filterName = req.query.filterName || null;
+    const filterLicense = req.query.filterLicense || null;
+    const filterDob = req.query.filterDob || null;
+    const filterCourse = req.query.filterCourse || null;
+    const filterPhone = req.query.filterPhone || null;
+    const filterEmail = req.query.filterEmail || null;
+    const filterState = req.query.filterState || null;
+
+    // Sort parameters (whitelist to prevent SQL injection)
+    const allowedSortColumns = {
+      name: 'sl.last_name',
+      state: 'sl.state',
+      license: 'sl.license_number',
+      dob: 'sl.dob',
+      phone: 'sl.phone',
+      email: 'sl.email',
+      course: 'sl.course_name',
+      registered: 'sl.registration_date',
+      lastQuiz: 'uqpt_latest.last_quiz_date',
+      submitted: 'r.submitted_on',
+      score: 'score_percentage'
+    };
+    const sortBy = req.query.sortBy && allowedSortColumns[req.query.sortBy] ? req.query.sortBy : null;
+    const sortOrder = req.query.sortOrder === 'asc' ? 'ASC' : 'DESC';
+    const sortColumn = sortBy ? allowedSortColumns[sortBy] : null;
     
     console.log(`📚 [ADMIN] Loading students for company ID: ${companyId}, page: ${page}, limit: ${limit}`);
     if (searchText) console.log(`🔍 Search: ${searchText}`);
     if (stateFilter) console.log(`📍 State filter: ${stateFilter}`);
     if (courseFilter) console.log(`📖 Course filter: ${courseFilter}`);
+    if (sortBy) console.log(`🔃 Sort: ${sortBy} ${sortOrder}`);
 
     // Build WHERE clause with optional filters
     const whereConditions = [];
@@ -2004,7 +2032,7 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
 
     // Search filter
     if (searchText) {
-      whereConditions.push(`(u.first_name ILIKE $${paramIndex} OR u.last_name ILIKE $${paramIndex})`);
+      whereConditions.push(`(u.first_name ILIKE $${paramIndex} OR u.last_name ILIKE $${paramIndex} OR u.license_number ILIKE $${paramIndex})`);
       params.push(`%${searchText}%`);
       paramIndex++;
     }
@@ -2020,6 +2048,43 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
     if (courseFilter) {
       whereConditions.push(`c.id = $${paramIndex}`);
       params.push(courseFilter);
+      paramIndex++;
+    }
+
+    // Column-level filters (applied to inner WHERE)
+    if (filterName) {
+      whereConditions.push(`(u.first_name ILIKE $${paramIndex} OR u.last_name ILIKE $${paramIndex})`);
+      params.push(`%${filterName}%`);
+      paramIndex++;
+    }
+    if (filterLicense) {
+      whereConditions.push(`u.license_number ILIKE $${paramIndex}`);
+      params.push(`%${filterLicense}%`);
+      paramIndex++;
+    }
+    if (filterDob) {
+      whereConditions.push(`TO_CHAR(u.dob, 'MM/DD/YYYY') ILIKE $${paramIndex}`);
+      params.push(`%${filterDob}%`);
+      paramIndex++;
+    }
+    if (filterCourse) {
+      whereConditions.push(`c.name ILIKE $${paramIndex}`);
+      params.push(`%${filterCourse}%`);
+      paramIndex++;
+    }
+    if (filterPhone) {
+      whereConditions.push(`u.phone ILIKE $${paramIndex}`);
+      params.push(`%${filterPhone}%`);
+      paramIndex++;
+    }
+    if (filterEmail) {
+      whereConditions.push(`u.email ILIKE $${paramIndex}`);
+      params.push(`%${filterEmail}%`);
+      paramIndex++;
+    }
+    if (filterState) {
+      whereConditions.push(`u.state ILIKE $${paramIndex}`);
+      params.push(`%${filterState}%`);
       paramIndex++;
     }
 
@@ -2039,6 +2104,8 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
           u.state,
           u.license_number,
           u.dob,
+          u.phone,
+          u.email,
           u.registration_date,
           uac.id as user_assigned_course_id,
           uac.company_id,
@@ -2056,6 +2123,8 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
         sl.state,
         sl.license_number,
         sl.dob,
+        sl.phone,
+        sl.email,
         sl.registration_date,
         sl.course_id,
         sl.course_name,
@@ -2098,7 +2167,7 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
         INNER JOIN quizes q ON uqpt.quiz_id = q.id AND q.course_id = sl.course_id AND q.active = true
         WHERE uqpt.user_id = sl.user_id
       ) uqpt_sum ON true
-      ORDER BY sl.registration_date DESC, sl.user_id, sl.course_id
+      ORDER BY ${sortColumn ? sortColumn + ' ' + sortOrder + ' NULLS LAST, ' : ''}sl.registration_date DESC, sl.user_id, sl.course_id
       LIMIT ${limitParam} OFFSET ${offsetParam}
     `;
 
