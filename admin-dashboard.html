@@ -69,7 +69,7 @@
 
     .admin-content {
       flex: 1;
-      padding: 30px;
+      padding: 30px 30px 70px 30px;
       overflow-y: auto;
     }
 
@@ -534,8 +534,8 @@
   </div>
 
   <script>
-    // Configuration
-    const PASSING_PERCENTAGE = 80;
+    // Configuration — fetched from server; 80 is a safe default
+    let PASSING_PERCENTAGE = 80;
     
     // Pagination state
     let currentPage = 1;
@@ -561,26 +561,30 @@
     // Date formatting functions
     function formatDateOfBirth(dateString) {
       if (!dateString) return 'N/A';
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
+      // Parse date parts directly to avoid UTC-to-local shift.
+      // DB stores date-only (e.g. "1982-02-24"); using new Date() would treat it
+      // as UTC midnight and shift it back one day for EST users.
+      const parts = String(dateString).match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (!parts) return String(dateString);
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${months[date.getMonth()]}-${date.getDate()}-${date.getFullYear()}`;
+      return `${months[parseInt(parts[2]) - 1]}-${parseInt(parts[3])}-${parts[1]}`;
     }
 
     function formatDateTime(dateString) {
       if (!dateString) return 'N/A';
-      const dateStr = dateString.replace('T', ' ').replace('Z', '').trim();
-      const parts = dateStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
-      if (!parts) return 'N/A';
+      // DB timestamps are stored in UTC. Append 'Z' so JavaScript parses them as
+      // UTC, then getHours()/getDate() etc. automatically convert to the browser's
+      // local timezone (e.g. EST = UTC-5).
+      let normalized = String(dateString).trim().replace(' ', 'T').replace(/\.\d+/, '');
+      if (!normalized.endsWith('Z') && !normalized.includes('+')) normalized += 'Z';
+      const date = new Date(normalized);
+      if (isNaN(date.getTime())) return 'N/A';
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const year = parts[1];
-      const month = months[parseInt(parts[2]) - 1];
-      const day = parseInt(parts[3]);
-      let hours = parseInt(parts[4]);
-      const minutes = parts[5];
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
       const ampm = hours >= 12 ? 'PM' : 'AM';
       hours = hours % 12 || 12;
-      return `${month} ${day}, ${year}, ${hours}:${minutes} ${ampm}`;
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}, ${hours}:${minutes} ${ampm}`;
     }
 
     // Check admin authentication
@@ -1216,13 +1220,53 @@
       }
     }
 
+    function showDisclaimer() {
+      document.getElementById('disclaimerModal').classList.add('active');
+    }
+    function hideDisclaimer() {
+      document.getElementById('disclaimerModal').classList.remove('active');
+    }
+
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const cfgResp = await fetch('/api/config');
+        if (cfgResp.ok) {
+          const cfg = await cfgResp.json();
+          PASSING_PERCENTAGE = cfg.passingPercentage;
+          console.log('✅ Config loaded — PASSING_PERCENTAGE:', PASSING_PERCENTAGE);
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not fetch /api/config, using default:', PASSING_PERCENTAGE);
+      }
       const isAdmin = await checkAdminAuth();
       if (isAdmin) {
         showStudents();
       }
     });
   </script>
+
+  <!-- Disclaimer Modal -->
+  <div id="disclaimerModal" class="disclaimer-overlay" onclick="if(event.target===this)hideDisclaimer()">
+    <div class="disclaimer-box">
+      <button class="disclaimer-close" onclick="hideDisclaimer()" title="Close">&#x2715;</button>
+      <h2>&#x2696;&#xFE0F; Disclaimer</h2>
+      <p>This platform is provided for educational and training purposes only. The materials, quizzes, and assessments are designed to help prepare students for Entry-Level Driver Training (ELDT) theory requirements and do not guarantee passage of any official examination, state licensing test, or CDL certification process.</p>
+      <h3>Content Accuracy</h3>
+      <p>While every effort is made to ensure the accuracy and currency of the training content, Sea Star Commercial Driving School and Brooklyn CDL Inc. make no warranties, express or implied, regarding the completeness, accuracy, reliability, or suitability of the information provided. Federal and state regulations may change; always consult the most current FMCSA guidelines and your state&rsquo;s licensing authority.</p>
+      <h3>No Liability</h3>
+      <p>Neither Sea Star Commercial Driving School nor Brooklyn CDL Inc. shall be liable for any direct, indirect, incidental, or consequential damages arising from the use of, or inability to use, this platform or its content.</p>
+      <h3>Personal Data</h3>
+      <p>Information submitted through this platform is used solely for training administration and record-keeping purposes in accordance with applicable privacy laws. For questions regarding your training requirements, please contact your instructor or administrator.</p>
+      <p class="disclaimer-footer-note">&copy; 2026. Content is provided by Sea Star Commercial Driving School. Learning Platform is provided by Brooklyn CDL Inc.</p>
+    </div>
+  </div>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    &copy; 2026. Content is provided by Sea Star Commercial Driving School. Learning Platform is provided by Brooklyn CDL Inc. &nbsp;|&nbsp;
+    <a href="#" onclick="showDisclaimer(); return false;">Disclaimer</a>
+  </footer>
+
 </body>
 </html>

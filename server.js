@@ -13,6 +13,214 @@ const db = require('./database/db');
 const app = express();
 const PORT = process.env.PORT || 80;
 const JWT_SECRET = process.env.JWT_SECRET || 'brooklyn-cdl-secret-key-2026';
+const PASSING_PERCENTAGE = 80;
+
+// Date formatting helpers (used in email templates)
+function formatDateOfBirth(dateString) {
+  if (!dateString) return 'N/A';
+  const parts = String(dateString).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!parts) return String(dateString);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[parseInt(parts[2]) - 1]}-${parseInt(parts[3])}-${parts[1]}`;
+}
+
+function formatDateTime(dateString) {
+  if (!dateString) return 'N/A';
+  let normalized = String(dateString).trim().replace(' ', 'T').replace(/\.\d+/, '');
+  if (!normalized.endsWith('Z') && !normalized.includes('+')) normalized += 'Z';
+  const date = new Date(normalized);
+  if (isNaN(date.getTime())) return 'N/A';
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}, ${hours}:${minutes} ${ampm}`;
+}
+
+// Build email HTML content from profile and progress data
+function buildEmailHtml(profile, progressData, submittedOn) {
+  const totalCorrect = progressData.overall.total_score;
+  const totalPossible = progressData.overall.total_questions;
+  const score = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
+
+  // Section results
+  let sectionResultsHtml = `
+    <div style="margin: 20px 0;">
+      <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid #3498db; padding-bottom: 5px;">
+        📊 Section Results
+      </h4>
+      <div style="display: grid; gap: 10px;">
+  `;
+
+  progressData.sections.forEach((section) => {
+    const sectionPercent = section.total_questions > 0 ? Math.round((section.score / section.total_questions) * 100) : 0;
+    const sectionStatus = sectionPercent >= PASSING_PERCENTAGE ? 'PASSED' : 'NOT PASSED';
+    const statusColor = sectionPercent >= PASSING_PERCENTAGE ? '#27ae60' : '#e74c3c';
+    const statusIcon = sectionPercent >= PASSING_PERCENTAGE ? '✅' : '❌';
+
+    sectionResultsHtml += `
+      <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
+                  border-radius: 8px; padding: 15px; border-left: 4px solid ${statusColor};
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h5 style="margin: 0; color: #2c3e50; font-size: 16px; font-weight: 600;">
+            ${statusIcon} ${section.section_name}
+          </h5>
+          <span style="background: ${statusColor}; color: white; padding: 4px 12px; 
+                       border-radius: 20px; font-size: 12px; font-weight: bold;">
+            ${sectionStatus}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: #7f8c8d; font-size: 14px;">
+            Score: <strong style="color: #2c3e50;">${section.score} / ${section.total_questions}</strong>
+          </span>
+          <div style="background: #ecf0f1; border-radius: 10px; padding: 4px 8px;">
+            <span style="color: ${statusColor}; font-weight: bold; font-size: 14px;">
+              ${sectionPercent}%
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  sectionResultsHtml += '</div></div>';
+
+  const finalStatus = score >= PASSING_PERCENTAGE ? 'PASSED' : 'NOT PASSED';
+  const finalStatusColor = score >= PASSING_PERCENTAGE ? '#27ae60' : '#e74c3c';
+  const finalStatusIcon = score >= PASSING_PERCENTAGE ? '🎉' : '⚠️';
+
+  return `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                max-width: 600px; margin: 0 auto; background: #ffffff;">
+      
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                  color: white; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
+        <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 1px;">
+          🚛 ELDT Score Submission
+        </h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">
+          Class A CDL Theory Training Results
+        </p>
+      </div>
+
+      <!-- Content -->
+      <div style="padding: 30px 20px; background: white;">
+        
+        <!-- Student Info Card -->
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px;
+                    border: 1px solid #e9ecef;">
+          <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center;">
+            👤 Student Information
+          </h3>
+          <div style="display: grid; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+              <span style="color: #7f8c8d; font-weight: 500;">Student:</span>
+              <span style="color: #2c3e50; font-weight: 600;">${profile.first_name} ${profile.last_name}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+              <span style="color: #7f8c8d; font-weight: 500;">Date of Birth:</span>
+              <span style="color: #2c3e50; font-weight: 600;">${formatDateOfBirth(profile.dob)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+              <span style="color: #7f8c8d; font-weight: 500;">License ID:</span>
+              <span style="color: #2c3e50; font-weight: 600;">${profile.state} ${profile.license_number}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+              <span style="color: #7f8c8d; font-weight: 500;">Email:</span>
+              <span style="color: #2c3e50; font-weight: 600;">${profile.email}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+              <span style="color: #7f8c8d; font-weight: 500;">Phone:</span>
+              <span style="color: #2c3e50; font-weight: 600;">${profile.phone || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px;
+                    border: 1px solid #e9ecef;">
+          <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center;">
+            ⏰ Timeline
+          </h3>
+          <div style="display: grid; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+              <span style="color: #7f8c8d; font-weight: 500;">Registered:</span>
+              <span style="color: #2c3e50; font-weight: 600;">${formatDateTime(profile.registration_date)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+              <span style="color: #7f8c8d; font-weight: 500;">Submitted:</span>
+              <span style="color: #2c3e50; font-weight: 600;">${formatDateTime(submittedOn)}</span>
+            </div>
+          </div>
+        </div>
+        
+        ${sectionResultsHtml}
+        
+        <!-- Final Score Card -->
+        <div style="background: linear-gradient(135deg, ${finalStatusColor} 0%, ${finalStatusColor}dd 100%); 
+                    color: white; border-radius: 12px; padding: 25px; text-align: center; 
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-top: 25px;">
+          <div style="font-size: 48px; margin-bottom: 10px;">${finalStatusIcon}</div>
+          <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 300;">Final Result</h2>
+          <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">
+            ${totalCorrect} / ${totalPossible}
+          </div>
+          <div style="font-size: 28px; font-weight: 600; margin: 10px 0;">
+            ${score}%
+          </div>
+          <div style="background: rgba(255,255,255,0.2); border-radius: 25px; padding: 12px 24px; 
+                     display: inline-block; margin-top: 15px;">
+            <span style="font-size: 18px; font-weight: bold; letter-spacing: 1px;">
+              ${finalStatus}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div style="background: #2c3e50; color: #bdc3c7; padding: 20px; text-align: center; 
+                  border-radius: 0 0 12px 12px; font-size: 14px;">
+        <p style="margin: 0;">
+          Brooklyn CDL ELDT Training Program<br>
+          <span style="opacity: 0.8;">Professional Driver Education & Certification</span>
+        </p>
+      </div>
+
+    </div>
+  `;
+}
+
+// Build plain-text email content
+function buildEmailText(profile, progressData, submittedOn) {
+  const totalCorrect = progressData.overall.total_score;
+  const totalPossible = progressData.overall.total_questions;
+  const score = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
+
+  let sectionResultsText = 'Section Results:\n';
+  progressData.sections.forEach((section) => {
+    const pct = section.total_questions > 0 ? Math.round((section.score / section.total_questions) * 100) : 0;
+    const status = pct >= PASSING_PERCENTAGE ? 'PASSED' : 'NOT PASSED';
+    sectionResultsText += `  ${section.section_name}: ${section.score} / ${section.total_questions} correct (${pct}%) - ${status}\n`;
+  });
+
+  return `Score Submission Summary:
+
+ELDT Class A CDL Theory
+
+Student: ${profile.first_name} ${profile.last_name} (DOB: ${formatDateOfBirth(profile.dob)} License: ${profile.state} ${profile.license_number})
+Email: ${profile.email}
+Phone: ${profile.phone || 'N/A'}
+Registered: ${formatDateTime(profile.registration_date)}
+Score Submitted On: ${formatDateTime(submittedOn)}
+
+${sectionResultsText}
+Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >= PASSING_PERCENTAGE ? 'PASSED' : 'NOT PASSED'}`;
+}
 
 // Middleware
 app.use(express.json());
@@ -1248,6 +1456,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Public config endpoint — exposes non-secret settings to clients
+app.get('/api/config', (req, res) => {
+  res.json({ passingPercentage: PASSING_PERCENTAGE });
+});
+
 // Email endpoint that uses server-side environment variables
 app.post('/api/send-email', async (req, res) => {
   const requestId = Date.now().toString(36);
@@ -1458,6 +1671,133 @@ app.post('/api/saveResults', async (req, res) => {
       details: error.message,
       requestId: requestId
     });
+  }
+});
+
+// Consolidated score submission endpoint
+// - Fetches profile & progress server-side (no client-supplied scores)
+// - Saves to DB, sends email, saves results file
+// - Returns preview HTML for confirmation modal
+app.post('/api/submit-scores', authenticateToken, async (req, res) => {
+  const requestId = Date.now().toString(36);
+  console.log(`\n🚀 [${requestId}] SUBMIT SCORES REQUEST`);
+  console.log(`   👤 User ID: ${req.user.userId}`);
+
+  try {
+    const { courseId } = req.body;
+    if (!courseId) {
+      return res.status(400).json({ success: false, error: 'courseId is required', requestId });
+    }
+
+    // 1. Fetch user profile
+    const userResult = await db.query(`
+      SELECT id, first_name, last_name, dob, email, phone, license_number, state, registration_date
+      FROM users WHERE id = $1 AND active = true
+    `, [req.user.userId]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'User not found', requestId });
+    }
+    const profile = userResult.rows[0];
+
+    // 2. Calculate progress server-side
+    const progressData = await calculateCourseProgressSummary(req.user.userId, courseId);
+    const totalCorrect = progressData.overall.total_score;
+    const totalPossible = progressData.overall.total_questions;
+    const scorePercentage = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
+    const passed = scorePercentage >= PASSING_PERCENTAGE;
+
+    console.log(`   📊 Score: ${totalCorrect}/${totalPossible} (${scorePercentage}%) - ${passed ? 'PASSED' : 'NOT PASSED'}`);
+
+    // 3. Save to Results table
+    const userCourseResult = await db.query(`
+      SELECT id FROM user_assigned_courses WHERE user_id = $1 AND course_id = $2 AND active = true
+    `, [req.user.userId, courseId]);
+
+    if (userCourseResult.rows.length === 0) {
+      return res.status(404).json({ success: false, error: 'User course assignment not found', requestId });
+    }
+
+    const resultInsert = await db.query(`
+      INSERT INTO results 
+      (user_assigned_course_id, total_score, total_possible, score_percentage, passed, submitted_on)
+      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      RETURNING id, submitted_on
+    `, [userCourseResult.rows[0].id, totalCorrect, totalPossible, scorePercentage, passed]);
+
+    const submittedOn = resultInsert.rows[0].submitted_on;
+    console.log(`   💾 Result ID: ${resultInsert.rows[0].id}, Submitted: ${submittedOn}`);
+
+    // 4. Build email content
+    const emailHtml = buildEmailHtml(profile, progressData, submittedOn);
+    const emailText = buildEmailText(profile, progressData, submittedOn);
+
+    // 5. Send email via Mailgun (non-blocking — don't fail the request if email fails)
+    const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
+    const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
+    const RECIPIENT_EMAIL = process.env.RECIPIENT_EMAIL || 'info@brooklyncdl.com';
+
+    if (MAILGUN_DOMAIN && MAILGUN_API_KEY) {
+      try {
+        const formData = new FormData();
+        formData.append('from', `Brooklyn CDL ELDT <postmaster@${MAILGUN_DOMAIN}>`);
+        formData.append('to', RECIPIENT_EMAIL);
+        formData.append('subject', 'ELDT Score Submission');
+        formData.append('html', emailHtml);
+        formData.append('text', emailText);
+
+        const mailResponse = await fetch(`https://api.mailgun.net/v3/${MAILGUN_DOMAIN}/messages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + Buffer.from('api:' + MAILGUN_API_KEY).toString('base64'),
+            ...formData.getHeaders()
+          },
+          body: formData
+        });
+
+        if (mailResponse.ok) {
+          console.log(`   📧 Email sent successfully`);
+        } else {
+          console.error(`   ⚠️ Email send failed: ${mailResponse.status} ${await mailResponse.text()}`);
+        }
+      } catch (emailErr) {
+        console.error(`   ⚠️ Email error (non-fatal):`, emailErr.message);
+      }
+    } else {
+      console.log(`   ⚠️ Mailgun not configured — skipping email`);
+    }
+
+    // 6. Save results HTML file
+    try {
+      const sanitize = (s) => (s || '').replace(/[^a-zA-Z0-9]/g, '');
+      const now = new Date();
+      const dateStamp = now.getFullYear().toString() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0');
+      const timeStamp = String(now.getHours()).padStart(2, '0') +
+        String(now.getMinutes()).padStart(2, '0') +
+        String(now.getSeconds()).padStart(2, '0');
+      const filename = `results.${sanitize(profile.license_number)}.${sanitize(profile.first_name)}.${sanitize(profile.last_name)}.${sanitize(profile.state)}.${dateStamp}.${timeStamp}.html`;
+      const resultsDir = path.join(__dirname, 'results');
+      if (!fs.existsSync(resultsDir)) fs.mkdirSync(resultsDir, { recursive: true });
+      fs.writeFileSync(path.join(resultsDir, filename), emailHtml, 'utf8');
+      console.log(`   📁 Results file saved: ${filename}`);
+    } catch (fileErr) {
+      console.error(`   ⚠️ File save error (non-fatal):`, fileErr.message);
+    }
+
+    // 7. Return preview HTML to client
+    console.log(`🟢 [${requestId}] SUBMIT SCORES COMPLETE`);
+    res.json({
+      success: true,
+      previewHtml: emailHtml,
+      score: { totalCorrect, totalPossible, scorePercentage, passed },
+      requestId
+    });
+
+  } catch (error) {
+    console.log(`💥 [${requestId}] SUBMIT SCORES ERROR:`, error.message);
+    res.status(500).json({ success: false, error: 'Server error submitting scores', details: error.message, requestId });
   }
 });
 
@@ -1747,11 +2087,16 @@ app.get('/api/admin/students', authenticateAdmin, async (req, res) => {
       ) r ON true
       LEFT JOIN LATERAL (
         SELECT 
-          SUM(uqpt.score) as total_score,
-          SUM(uqpt.total_questions) as total_questions
+          COALESCE(SUM(uqpt.score), 0) as total_score,
+          (
+            SELECT COUNT(qq.id)
+            FROM quizes q2
+            INNER JOIN quiz_questions qq ON qq.quiz_id = q2.id AND qq.active = true
+            WHERE q2.course_id = sl.course_id AND q2.active = true
+          ) as total_questions
         FROM user_quiz_progress_tracker uqpt
-        INNER JOIN quizes q ON uqpt.quiz_id = q.id
-        WHERE uqpt.user_id = sl.user_id AND q.course_id = sl.course_id AND q.active = true
+        INNER JOIN quizes q ON uqpt.quiz_id = q.id AND q.course_id = sl.course_id AND q.active = true
+        WHERE uqpt.user_id = sl.user_id
       ) uqpt_sum ON true
       ORDER BY sl.registration_date DESC, sl.user_id, sl.course_id
       LIMIT ${limitParam} OFFSET ${offsetParam}

@@ -73,7 +73,7 @@
         <div class="form-row">
           <div class="form-group">
             <label for="signupDob">Date of Birth *</label>
-            <input type="date" id="signupDob" required>
+            <input type="text" id="signupDob" required placeholder="MM/DD/YYYY" maxlength="10" oninput="formatDobInput(this)" onkeydown="dobKeyDown(event, this)" onblur="validateDob()">
             <div class="error-msg" id="signupDobError"></div>
           </div>
           <div class="form-group">
@@ -159,7 +159,7 @@
       <div class="form-row">
         <div class="form-group">
           <label for="signupPhone">Phone</label>
-          <input type="tel" id="signupPhone" oninput="formatPhoneNumber(this)" onblur="validatePhone()" maxlength="14" placeholder="(123) 456-7890">
+          <input type="tel" id="signupPhone" oninput="formatPhoneNumber(this)" onkeydown="phoneKeyDown(event, this)" onblur="validatePhone()" maxlength="14" placeholder="(123) 456-7890">
           <div class="error-msg" id="signupPhoneError"></div>
         </div>
         <div class="form-group">
@@ -219,7 +219,7 @@
       <strong id="globalCount">0 / 0 Correct</strong>
       <div id="pctBox" style="font-size: 1.1rem; margin-top: 5px; font-weight: bold;">0%</div>
       <div id="attemptedBox" class="attempted-text">Total Attempted: 0</div>
-      <div class="pass-msg"><script>document.write(PASSING_PERCENTAGE)</script>% of correct answers are required based on the total number of questions in order to pass</div>
+      <div class="pass-msg"><span id="passingPctDisplay">80</span>% of correct answers are required based on the total number of questions in order to pass</div>
     </div>
     <nav id="sidebarNav"></nav>
   </aside>
@@ -232,38 +232,36 @@
     // Server-side configuration (environment variables handled by server)
     // No need for client-side API keys anymore!
 
-    // Configuration Constants
-    const PASSING_PERCENTAGE = 80; // Minimum percentage required to pass
+    // Configuration — fetched from server; 80 is a safe default until the fetch completes
+    let PASSING_PERCENTAGE = 80;
 
     // Date formatting functions
     function formatDateOfBirth(dateString) {
       if (!dateString) return 'N/A';
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString; // Return original if invalid
+      // Parse date parts directly to avoid UTC-to-local shift.
+      // DB stores date-only (e.g. "1982-02-24"); using new Date() would treat it
+      // as UTC midnight and shift it back one day for EST users.
+      const parts = String(dateString).match(/(\d{4})-(\d{2})-(\d{2})/);
+      if (!parts) return String(dateString);
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${months[date.getMonth()]}-${date.getDate()}-${date.getFullYear()}`;
+      return `${months[parseInt(parts[2]) - 1]}-${parseInt(parts[3])}-${parts[1]}`;
     }
 
     function formatDateTime(dateString) {
       if (!dateString) return 'N/A';
-      
-      // Parse the date string directly without timezone conversion
-      // Format: "2026-02-23 23:36:56.344859" or "2026-02-23T23:36:56.344859Z"
-      const dateStr = dateString.replace('T', ' ').replace('Z', '').trim();
-      const parts = dateStr.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})/);
-      
-      if (!parts) return 'N/A';
-      
+      // DB timestamps are stored in UTC. Append 'Z' so JavaScript parses them as
+      // UTC, then getHours()/getDate() etc. automatically convert to the browser's
+      // local timezone (e.g. EST = UTC-5).
+      let normalized = String(dateString).trim().replace(' ', 'T').replace(/\.\d+/, '');
+      if (!normalized.endsWith('Z') && !normalized.includes('+')) normalized += 'Z';
+      const date = new Date(normalized);
+      if (isNaN(date.getTime())) return 'N/A';
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const year = parts[1];
-      const month = months[parseInt(parts[2]) - 1];
-      const day = parseInt(parts[3]);
-      let hours = parseInt(parts[4]);
-      const minutes = parts[5];
+      let hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
       const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12; // Convert to 12-hour format
-      
-      return `${month} ${day}, ${year}, ${hours}:${minutes} ${ampm}`;
+      hours = hours % 12 || 12;
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}, ${hours}:${minutes} ${ampm}`;
     }
 
     let currentQuizId = null;
@@ -395,26 +393,145 @@
       return true;
     }
 
-    function formatPhoneNumber(input) {
-      // Remove all non-digit characters
-      let value = input.value.replace(/\D/g, '');
-      
-      // Limit to 10 digits
-      value = value.substring(0, 10);
-      
-      // Format as (XXX) XXX-XXXX
-      let formattedValue = '';
-      if (value.length > 0) {
-        formattedValue = '(' + value.substring(0, 3);
-        if (value.length >= 3) {
-          formattedValue += ') ' + value.substring(3, 6);
+    function phoneKeyDown(event, input) {
+      if (event.key !== 'Backspace') return;
+      const pos = input.selectionStart;
+      if (input.selectionStart !== input.selectionEnd || pos === 0) return;
+      // If character immediately before cursor is a non-digit (formatting char),
+      // intercept backspace so the digit to its left gets deleted correctly.
+      if (/\D/.test(input.value[pos - 1])) {
+        event.preventDefault();
+        const digits = input.value.replace(/\D/g, '');
+        const digitsBefore = input.value.substring(0, pos).replace(/\D/g, '').length;
+        if (digitsBefore === 0) {
+          input.value = '';
+          return;
         }
-        if (value.length >= 6) {
-          formattedValue += '-' + value.substring(6, 10);
-        }
+        const newDigits = digits.substring(0, digitsBefore - 1) + digits.substring(digitsBefore);
+        input.value = buildFormattedPhone(newDigits);
+        const newPos = formattedCursorPos(digitsBefore - 1);
+        input.setSelectionRange(newPos, newPos);
       }
-      
-      input.value = formattedValue;
+    }
+
+    function buildFormattedPhone(digits) {
+      digits = digits.replace(/\D/g, '').substring(0, 10);
+      if (!digits) return '';
+      let out = '(' + digits.substring(0, 3);
+      if (digits.length >= 3) out += ') ' + digits.substring(3, 6);
+      if (digits.length >= 6) out += '-' + digits.substring(6, 10);
+      return out;
+    }
+
+    function formattedCursorPos(digitIndex) {
+      // Map digit count to character position in (XXX) XXX-XXXX
+      if (digitIndex <= 0) return 1;
+      if (digitIndex < 3) return digitIndex + 1;   // inside area code
+      if (digitIndex < 6) return digitIndex + 3;   // after ") "
+      return digitIndex + 4;                        // after "-"
+    }
+
+    function formatPhoneNumber(input) {
+      const pos = input.selectionStart;
+      const oldVal = input.value;
+      const newVal = buildFormattedPhone(oldVal);
+      if (oldVal === newVal) return;
+      const digitsBeforeCursor = oldVal.substring(0, pos).replace(/\D/g, '').length;
+      input.value = newVal;
+      const newPos = formattedCursorPos(digitsBeforeCursor);
+      input.setSelectionRange(newPos, newPos);
+    }
+
+    // --- Date of Birth formatting (MM/DD/YYYY) ---
+    function dobKeyDown(event, input) {
+      if (event.key !== 'Backspace') return;
+      const pos = input.selectionStart;
+      if (input.selectionStart !== input.selectionEnd || pos === 0) return;
+      if (/\D/.test(input.value[pos - 1])) {
+        event.preventDefault();
+        const digits = input.value.replace(/\D/g, '');
+        const digitsBefore = input.value.substring(0, pos).replace(/\D/g, '').length;
+        if (digitsBefore === 0) { input.value = ''; return; }
+        const newDigits = digits.substring(0, digitsBefore - 1) + digits.substring(digitsBefore);
+        input.value = buildFormattedDob(newDigits);
+        const newPos = formattedDobCursorPos(digitsBefore - 1);
+        input.setSelectionRange(newPos, newPos);
+      }
+    }
+
+    function buildFormattedDob(digits) {
+      digits = digits.replace(/\D/g, '').substring(0, 8);
+      if (!digits) return '';
+      let out = digits.substring(0, 2);
+      if (digits.length >= 2) out += '/' + digits.substring(2, 4);
+      if (digits.length >= 4) out += '/' + digits.substring(4, 8);
+      return out;
+    }
+
+    function formattedDobCursorPos(digitIndex) {
+      // Map digit count to char position in MM/DD/YYYY
+      if (digitIndex <= 0) return 0;
+      if (digitIndex < 2) return digitIndex;        // inside MM
+      if (digitIndex < 4) return digitIndex + 1;    // inside DD (after first /)
+      return digitIndex + 2;                         // inside YYYY (after both /)
+    }
+
+    function formatDobInput(input) {
+      const pos = input.selectionStart;
+      const oldVal = input.value;
+      const newVal = buildFormattedDob(oldVal);
+      if (oldVal === newVal) return;
+      const digitsBeforeCursor = oldVal.substring(0, pos).replace(/\D/g, '').length;
+      input.value = newVal;
+      const newPos = formattedDobCursorPos(digitsBeforeCursor);
+      input.setSelectionRange(newPos, newPos);
+    }
+
+    // Convert MM/DD/YYYY display value to YYYY-MM-DD for database
+    function parseDobForSubmit(displayValue) {
+      const digits = displayValue.replace(/\D/g, '');
+      if (digits.length !== 8) return '';
+      const mm = digits.substring(0, 2);
+      const dd = digits.substring(2, 4);
+      const yyyy = digits.substring(4, 8);
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // Returns an error string, or '' if valid
+    function getDobError(displayValue) {
+      const digits = (displayValue || '').replace(/\D/g, '');
+      if (digits.length === 0) return 'Date of birth is required';
+      if (digits.length < 8) return 'Please enter a complete date (MM/DD/YYYY)';
+      const mm = parseInt(digits.substring(0, 2), 10);
+      const dd = parseInt(digits.substring(2, 4), 10);
+      const yyyy = parseInt(digits.substring(4, 8), 10);
+      if (mm < 1 || mm > 12) return 'Month must be between 01 and 12';
+      // Days per month (account for leap year)
+      const isLeap = (yyyy % 4 === 0 && yyyy % 100 !== 0) || yyyy % 400 === 0;
+      const daysInMonth = [0,31,isLeap?29:28,31,30,31,30,31,31,30,31,30,31];
+      if (dd < 1 || dd > daysInMonth[mm]) return `Day must be between 01 and ${daysInMonth[mm]} for the given month`;
+      const today = new Date();
+      const dob = new Date(yyyy, mm - 1, dd);
+      const age = today.getFullYear() - yyyy - (today < new Date(today.getFullYear(), mm - 1, dd) ? 1 : 0);
+      if (yyyy < 1900) return 'Please enter a valid year (1900 or later)';
+      if (dob > today) return 'Date of birth cannot be in the future';
+      if (age < 1) return 'Must be at least 16 years old';
+      if (age > 120) return 'Please enter a valid date of birth';
+      return '';
+    }
+
+    function validateDob() {
+      const input = document.getElementById('signupDob');
+      const errorEl = document.getElementById('signupDobError');
+      const err = getDobError(input.value);
+      if (err) {
+        errorEl.textContent = err;
+        errorEl.style.display = 'block';
+        return false;
+      }
+      errorEl.textContent = '';
+      errorEl.style.display = 'none';
+      return true;
     }
 
     function validatePhone() {
@@ -564,7 +681,7 @@
       const formData = {
         firstName: document.getElementById('signupFirstName').value.trim(),
         lastName: document.getElementById('signupLastName').value.trim(),
-        dob: document.getElementById('signupDob').value,
+        dob: parseDobForSubmit(document.getElementById('signupDob').value),
         licenseNumber: document.getElementById('signupLicenseNumber').value.trim(),
         state: document.getElementById('signupState').value.trim(),
         email: document.getElementById('signupEmail').value.trim(),
@@ -597,8 +714,9 @@
         showError('signupLastNameError', 'Last name must be at least 2 characters');
         hasErrors = true;
       }
-      if (!formData.dob) {
-        showError('signupDobError', 'Date of birth is required');
+      const dobErr = getDobError(document.getElementById('signupDob').value);
+      if (dobErr) {
+        showError('signupDobError', dobErr);
         hasErrors = true;
       }
       if (!formData.state) {
@@ -771,8 +889,20 @@
       return false;
     }
 
-    // Initialize authentication on page load
-    document.addEventListener('DOMContentLoaded', () => {
+    // Initialize on page load — fetch server config first, then authenticate
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const cfgResp = await fetch('/api/config');
+        if (cfgResp.ok) {
+          const cfg = await cfgResp.json();
+          PASSING_PERCENTAGE = cfg.passingPercentage;
+          const pctSpan = document.getElementById('passingPctDisplay');
+          if (pctSpan) pctSpan.textContent = PASSING_PERCENTAGE;
+          console.log('✅ Config loaded — PASSING_PERCENTAGE:', PASSING_PERCENTAGE);
+        }
+      } catch (e) {
+        console.warn('⚠️ Could not fetch /api/config, using default:', PASSING_PERCENTAGE);
+      }
       loadCourses(); // Preload courses for signup form
       checkAuthStatus();
     });
@@ -1010,281 +1140,30 @@
     }
 
     async function submitScores() {
-      // Create submission date in local timezone format (matching database format)
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      const submissionDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      
-      // Fetch user profile data and scores from server
       try {
         const authToken = localStorage.getItem('authToken');
-        
-        // Fetch user profile
-        const profileResponse = await fetch('/api/user/profile', {
-          headers: authToken ? { 'X-Auth-Token': authToken } : {},
-          credentials: 'include'
-        });
-        
-        if (!profileResponse.ok) {
-          alert('Unable to fetch your profile. Please try again.');
-          return;
-        }
-        
-        const profile = await profileResponse.json();
-        
-        // Fetch progress data
-        const progressUrl = `/api/user/course-progress?courseId=${activeCourseId || 1}`;
-        const progressResponse = await fetch(progressUrl, {
-          headers: authToken ? { 'X-Auth-Token': authToken } : {},
-          credentials: 'include'
-        });
-        
-        if (!progressResponse.ok) {
-          alert('Unable to fetch your scores. Please try again.');
-          return;
-        }
-        
-        const progressData = await progressResponse.json();
-        const totalCorrect = progressData.overall.total_score;
-        const totalPossible = progressData.overall.total_questions;
-        const score = totalPossible > 0 ? Math.round((totalCorrect / totalPossible) * 100) : 0;
-        
-        const emailBody = `ELDT Class A CDL Theory
-Student: ${profile.first_name} ${profile.last_name} (DOB: ${formatDateOfBirth(profile.dob)} License: ${profile.state} ${profile.license_number})
-Email: ${profile.email} Phone: ${profile.phone || 'N/A'}
-Registered: ${formatDateTime(profile.registration_date)} 
-Score Submitted On: ${formatDateTime(submissionDate)}
-Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >= PASSING_PERCENTAGE ? 'PASSED' : 'NOT PASSED'}
-        `.trim();
-        
-        const recipient = "info@brooklyncdl.com";
-        const subject = encodeURIComponent("ELDT Score Submission");
-        
-        // Create properly formatted email body with HTML formatting
-        // Generate section results from server data
-        let sectionResultsHtml = `
-          <div style="margin: 20px 0;">
-            <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid #3498db; padding-bottom: 5px;">
-              📊 Section Results
-            </h4>
-            <div style="display: grid; gap: 10px;">
-        `;
-        
-        let sectionResultsText = 'Section Results:\n';
-        
-        progressData.sections.forEach((section) => {
-          const sectionTitle = section.section_name;
-          const sectionTotal = section.total_questions;
-          const sectionCorrect = section.score;
-          const sectionPercent = sectionTotal > 0 ? Math.round((sectionCorrect / sectionTotal) * 100) : 0;
-          const sectionStatus = sectionPercent >= PASSING_PERCENTAGE ? 'PASSED' : 'NOT PASSED';
-          const statusColor = sectionPercent >= PASSING_PERCENTAGE ? '#27ae60' : '#e74c3c';
-          const statusIcon = sectionPercent >= PASSING_PERCENTAGE ? '✅' : '❌';
-          
-          sectionResultsHtml += `
-            <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); 
-                        border-radius: 8px; padding: 15px; border-left: 4px solid ${statusColor};
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h5 style="margin: 0; color: #2c3e50; font-size: 16px; font-weight: 600;">
-                  ${statusIcon} ${sectionTitle}
-                </h5>
-                <span style="background: ${statusColor}; color: white; padding: 4px 12px; 
-                             border-radius: 20px; font-size: 12px; font-weight: bold;">
-                  ${sectionStatus}
-                </span>
-              </div>
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="color: #7f8c8d; font-size: 14px;">
-                  Score: <strong style="color: #2c3e50;">${sectionCorrect} / ${sectionTotal}</strong>
-                </span>
-                <div style="background: #ecf0f1; border-radius: 10px; padding: 4px 8px;">
-                  <span style="color: ${statusColor}; font-weight: bold; font-size: 14px;">
-                    ${sectionPercent}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          `;
-          
-          sectionResultsText += `  ${sectionTitle}: ${sectionCorrect} / ${sectionTotal} correct (${sectionPercent}%) - ${sectionStatus}\n`;
-        });
-        
-        sectionResultsHtml += '</div></div>';
-
-        const finalStatus = score >= PASSING_PERCENTAGE ? 'PASSED' : 'NOT PASSED';
-        const finalStatusColor = score >= PASSING_PERCENTAGE ? '#27ae60' : '#e74c3c';
-        const finalStatusIcon = score >= PASSING_PERCENTAGE ? '🎉' : '⚠️';
-
-        const emailBodyHtml = `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                      max-width: 600px; margin: 0 auto; background: #ffffff;">
-            
-            <!-- Header -->
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; padding: 30px 20px; text-align: center; border-radius: 12px 12px 0 0;">
-              <h1 style="margin: 0; font-size: 28px; font-weight: 300; letter-spacing: 1px;">
-                🚛 ELDT Score Submission
-              </h1>
-              <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">
-                Class A CDL Theory Training Results
-              </p>
-            </div>
-
-            <!-- Content -->
-            <div style="padding: 30px 20px; background: white;">
-              
-              <!-- Student Info Card -->
-              <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px;
-                          border: 1px solid #e9ecef;">
-                <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center;">
-                  👤 Student Information
-                </h3>
-                <div style="display: grid; gap: 8px;">
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                    <span style="color: #7f8c8d; font-weight: 500;">Student:</span>
-                    <span style="color: #2c3e50; font-weight: 600;">${profile.first_name} ${profile.last_name}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                    <span style="color: #7f8c8d; font-weight: 500;">Date of Birth:</span>
-                    <span style="color: #2c3e50; font-weight: 600;">${formatDateOfBirth(profile.dob)}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                    <span style="color: #7f8c8d; font-weight: 500;">License ID:</span>
-                    <span style="color: #2c3e50; font-weight: 600;">${profile.state} ${profile.license_number}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                    <span style="color: #7f8c8d; font-weight: 500;">Email:</span>
-                    <span style="color: #2c3e50; font-weight: 600;">${profile.email}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                    <span style="color: #7f8c8d; font-weight: 500;">Phone:</span>
-                    <span style="color: #2c3e50; font-weight: 600;">${profile.phone || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Timeline -->
-              <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 25px;
-                          border: 1px solid #e9ecef;">
-                <h3 style="color: #2c3e50; margin: 0 0 15px 0; font-size: 20px; display: flex; align-items: center;">
-                  ⏰ Timeline
-                </h3>
-                <div style="display: grid; gap: 8px;">
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
-                    <span style="color: #7f8c8d; font-weight: 500;">Registered:</span>
-                    <span style="color: #2c3e50; font-weight: 600;">${formatDateTime(profile.registration_date)}</span>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                    <span style="color: #7f8c8d; font-weight: 500;">Submitted:</span>
-                    <span style="color: #2c3e50; font-weight: 600;">${formatDateTime(submissionDate)}</span>
-                  </div>
-                </div>
-              </div>
-              
-              ${sectionResultsHtml}
-              
-              <!-- Final Score Card -->
-              <div style="background: linear-gradient(135deg, ${finalStatusColor} 0%, ${finalStatusColor}dd 100%); 
-                          color: white; border-radius: 12px; padding: 25px; text-align: center; 
-                          box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-top: 25px;">
-                <div style="font-size: 48px; margin-bottom: 10px;">${finalStatusIcon}</div>
-                <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: 300;">Final Result</h2>
-                <div style="font-size: 36px; font-weight: bold; margin: 15px 0;">
-                  ${totalCorrect} / ${totalPossible}
-                </div>
-                <div style="font-size: 28px; font-weight: 600; margin: 10px 0;">
-                  ${score}%
-                </div>
-                <div style="background: rgba(255,255,255,0.2); border-radius: 25px; padding: 12px 24px; 
-                           display: inline-block; margin-top: 15px;">
-                  <span style="font-size: 18px; font-weight: bold; letter-spacing: 1px;">
-                    ${finalStatus}
-                  </span>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Footer -->
-            <div style="background: #2c3e50; color: #bdc3c7; padding: 20px; text-align: center; 
-                        border-radius: 0 0 12px 12px; font-size: 14px;">
-              <p style="margin: 0;">
-                Brooklyn CDL ELDT Training Program<br>
-                <span style="opacity: 0.8;">Professional Driver Education & Certification</span>
-              </p>
-            </div>
-
-          </div>
-        `;
-
-        // Plain text version for fallback
-        const emailBodyText = `Score Submission Summary:
-
-ELDT Class A CDL Theory
-
-Student: ${profile.first_name} ${profile.last_name} (DOB: ${formatDateOfBirth(profile.dob)} License: ${profile.state} ${profile.license_number})
-Email: ${profile.email}
-Phone: ${profile.phone || 'N/A'}
-Registered: ${formatDateTime(profile.registration_date)}
-Score Submitted On: ${formatDateTime(submissionDate)}
-
-${sectionResultsText}
-Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >= PASSING_PERCENTAGE ? 'PASSED' : 'NOT PASSED'}
-        `;
-
-        // Send email via Mailgun
-        sendEmailViaMailgun(emailBodyHtml, emailBodyText);
-        
-        // Save results to file
-        saveResults(emailBodyHtml, profile.license_number, profile.state, profile.first_name, profile.last_name);
-        
-        // Submit final results to database (await so DB write completes before showing modal)
-        await submitFinalResultsToDatabase(activeCourseId || 1, totalCorrect, totalPossible, score);
-        
-        // Show confirmation to user
-        showEmailConfirmation(emailBodyHtml);
-        
-      } catch (progressError) {
-        console.error('Error fetching progress data:', progressError);
-        alert('Unable to fetch your scores. Please try again.');
-      }
-    }
-
-    // Submit final results to Results table in database
-    async function submitFinalResultsToDatabase(courseId, totalScore, totalPossible, scorePercentage) {
-      try {
-        const authToken = localStorage.getItem('authToken');
-        const response = await fetch('/api/submit-final-results', {
+        const response = await fetch('/api/submit-scores', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'X-Auth-Token': authToken
           },
           credentials: 'include',
-          body: JSON.stringify({
-            courseId: courseId,
-            totalScore: totalScore,
-            totalPossible: totalPossible,
-            scorePercentage: scorePercentage,
-            passed: scorePercentage >= PASSING_PERCENTAGE
-          })
+          body: JSON.stringify({ courseId: activeCourseId || 1 })
         });
 
         const result = await response.json();
 
         if (response.ok && result.success) {
-          console.log('✅ Final results saved to database:', result);
+          console.log('✅ Scores submitted successfully:', result.score);
+          showEmailConfirmation(result.previewHtml);
         } else {
-          console.error('⚠️ Failed to save results to database:', result.error);
+          console.error('❌ Submit scores failed:', result.error);
+          alert(result.error || 'Failed to submit scores. Please try again.');
         }
       } catch (error) {
-        console.error('❌ Error submitting final results to database:', error);
+        console.error('❌ Error submitting scores:', error);
+        alert('Unable to submit scores. Please check your connection and try again.');
       }
     }
 
@@ -1294,71 +1173,6 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
       // TODO: Implement certificate generation and download
       // This could call an API endpoint like /api/user/certificate
       // and download a PDF certificate
-    }
-
-    // Mailgun email sending function (now uses server-side API)
-    async function sendEmailViaMailgun(htmlContent, textContent) {
-      try {
-        const response = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            htmlContent: htmlContent,
-            textContent: textContent,
-            subject: 'ELDT Score Submission'
-          })
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          console.log('Email sent successfully:', result);
-          showSuccessMessage('Email sent successfully!');
-        } else {
-          console.error('Failed to send email:', result.error);
-          showErrorMessage('Failed to send email. Please try again or contact support.');
-        }
-      } catch (error) {
-        console.error('Error sending email:', error);
-        showErrorMessage('Error sending email. Please check your connection and try again.');
-      }
-    }
-
-    // Save results to file function (uses server-side API)
-    async function saveResults(htmlContent, licenseNumber, state, firstName, lastName) {
-      try {
-        const response = await fetch('/api/saveResults', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            htmlContent: htmlContent,
-            licenseNumber: licenseNumber,
-            state: state,
-            firstName: firstName,
-            lastName: lastName,
-          })
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          console.log('Results saved successfully:', result);
-          showSuccessMessage('Results saved successfully!');
-          return true;
-        } else {
-          console.error('Failed to save results:', result.error);
-          showErrorMessage('Failed to save results. Please try again or contact support.');
-          return false;
-        }
-      } catch (error) {
-        console.error('Error saving results:', error);
-        showErrorMessage('Error saving results. Please check your connection and try again.');
-        return false;
-      }
     }
 
     // Show email confirmation with HTML formatting
@@ -2615,6 +2429,36 @@ Final Score: ${totalCorrect} / ${totalPossible} Correct (${score}%) - ${score >=
         }
       }
     });
+
+    function showDisclaimer() {
+      document.getElementById('disclaimerModal').classList.add('active');
+    }
+    function hideDisclaimer() {
+      document.getElementById('disclaimerModal').classList.remove('active');
+    }
   </script>
+
+  <!-- Disclaimer Modal -->
+  <div id="disclaimerModal" class="disclaimer-overlay" onclick="if(event.target===this)hideDisclaimer()">
+    <div class="disclaimer-box">
+      <button class="disclaimer-close" onclick="hideDisclaimer()" title="Close">&#x2715;</button>
+      <h2>&#x2696;&#xFE0F; Disclaimer</h2>
+      <p>This platform is provided for educational and training purposes only. The materials, quizzes, and assessments are designed to help prepare students for Entry-Level Driver Training (ELDT) theory requirements and do not guarantee passage of any official examination, state licensing test, or CDL certification process.</p>
+      <h3>Content Accuracy</h3>
+      <p>While every effort is made to ensure the accuracy and currency of the training content, Sea Star Commercial Driving School and Brooklyn CDL Inc. make no warranties, express or implied, regarding the completeness, accuracy, reliability, or suitability of the information provided. Federal and state regulations may change; always consult the most current FMCSA guidelines and your state&rsquo;s licensing authority.</p>
+      <h3>No Liability</h3>
+      <p>Neither Sea Star Commercial Driving School nor Brooklyn CDL Inc. shall be liable for any direct, indirect, incidental, or consequential damages arising from the use of, or inability to use, this platform or its content.</p>
+      <h3>Personal Data</h3>
+      <p>Information submitted through this platform is used solely for training administration and record-keeping purposes in accordance with applicable privacy laws. For questions regarding your training requirements, please contact your instructor or administrator.</p>
+      <p class="disclaimer-footer-note">&copy; 2026. Content is provided by Sea Star Commercial Driving School. Learning Platform is provided by Brooklyn CDL Inc.</p>
+    </div>
+  </div>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    &copy; 2026. Content is provided by Sea Star Commercial Driving School. Learning Platform is provided by Brooklyn CDL Inc. &nbsp;|&nbsp;
+    <a href="#" onclick="showDisclaimer(); return false;">Disclaimer</a>
+  </footer>
+
 </body>
 </html>

@@ -23,6 +23,10 @@ const dbConfig = {
   password: rawPassword || '',
   port: parseInt(process.env.DB_PORT) || 5432,
   ssl: false,
+  // Force all sessions to use UTC so timestamps are always returned as UTC
+  // strings regardless of the OS/server timezone. The JavaScript client then
+  // appends 'Z' and lets the browser convert to local time correctly.
+  options: '-c timezone=UTC',
   // Add connection timeout and retry settings
   connectionTimeoutMillis: 5000,
   idleTimeoutMillis: 30000,

@@ -46,6 +46,11 @@ ON course_sections(course_id, section_number) WHERE active = true;
 CREATE INDEX IF NOT EXISTS idx_quiz_questions_active 
 ON quiz_questions(quiz_id) WHERE active = true;
 
+-- Covering index for COUNT(qq.id) in admin student list query
+-- Allows index-only scan when counting active questions per quiz (no table heap hit)
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_active_covering
+ON quiz_questions(quiz_id, id) WHERE active = true;
+
 -- quiz_multiple_choices indexes
 -- Index for fetching correct answers (used in original query)
 CREATE INDEX IF NOT EXISTS idx_qmc_question_correct 
